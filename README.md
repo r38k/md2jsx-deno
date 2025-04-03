@@ -1,3 +1,7 @@
 ```
-deno task start
+deno task build
 ```
+
+
+TODO
+- [ ] Clipboard
