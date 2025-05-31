@@ -1,111 +1,71 @@
 # md2jsx-deno
 
-Markdown を JSX に変換するための Deno ベースのツールです。インラインスタイルを使用して、さまざまなテーマでマークダウンを美しく表示します。
+MarkdownをインラインスタイルのReact JSXコンポーネントに変換するツールです。LINE WORKSの掲示板などの外部CSSをサポートしないプラットフォーム向けに設計されています。
 
-## 特徴
+## 機能
 
-- 複数のテーマ（ライト、ダーク、セピア、Nord、GitHub、Dracula）
-- Web アプリケーションとコマンドラインインターフェース（CLI）の両方をサポート
-- 以下のマークダウン要素をサポート:
-  - 見出し (h1, h2, h3)
-  - 太字、イタリック、取り消し線
-  - リンクと画像
-  - コードブロックとインラインコード（シンタックスハイライト付き）
-  - 引用
-  - リスト（順序付き、順序なし、チェックボックス）
-  - テーブル
-  - 水平線
+- Markdownからインラインスタイル付きHTMLへの変換
+- 複数のテーマサポート（light, dark, sepia, nord, github, dracula）
+- シンタックスハイライト付きコードブロック
+- Webアプリケーションとしてのライブプレビュー
+- CLIツールとしての静的HTML生成
+- OGPプレビュー機能（SSR対応）
 
-## インストール
+## 使い方
 
-```bash
-# リポジトリをクローン
-git clone https://github.com/yourusername/md2jsx-deno.git
-cd md2jsx-deno
-
-# 依存関係をインストール
-deno cache --reload deno.json
-```
-
-## 使用方法
-
-### Web アプリケーション
-
-Web アプリケーションを起動するには:
+### Webアプリとして起動
 
 ```bash
 deno task dev
 ```
 
-ブラウザで `http://localhost:5173` を開いて、マークダウンエディタにアクセスします。
+ブラウザで http://localhost:5173 を開くと、Markdownエディタが表示されます。
 
-### CLI ツール
+#### OGPプレビュー機能
+- OGP設定をONにすると、スタンドアロンリンク（段落内に単独で存在するリンク）がOGPカードとして表示されます
+- SSR対応により、WebアプリとCLIツール両方で利用可能
 
-CLI ツールをビルドするには:
+### CLIツールとして使用
 
+1. CLIツールをビルド:
 ```bash
 deno task build
 ```
 
-これにより、`bin/md2jsx` 実行可能ファイルが作成されます。
-
-マークダウンファイルを HTML に変換するには:
-
+2. Markdownファイルを変換:
 ```bash
-./bin/md2jsx path/to/your/markdown-file.md
+./bin/md2jsx input.md
 ```
 
-これにより、同じディレクトリに HTML ファイルが生成されます。
-
-## テーマ
-
-以下のテーマが利用可能です:
-
-- `light` - 白背景に暗いテキスト
-- `dark` - 暗い背景に明るいテキスト
-- `sepia` - セピア調の背景とテキスト
-- `nord` - Nord カラースキーム
-- `github` - GitHub スタイル
-- `dracula` - Dracula カラースキーム
-
-Web アプリケーションでテーマを変更するには、テーマセレクターを使用します。
-
-CLI でテーマを指定するには、`export.tsx` ファイルの `themeName` プロパティを編集します。
-
-## カスタマイズ
-
-カスタムテーマを作成するには、`MarkdownToJsx.tsx` ファイルの `themes` オブジェクトに新しいテーマを追加します。
-
-## 開発
-
-### 前提条件
-
-- [Deno](https://deno.land/) 1.37.0 以上
-- [Node.js](https://nodejs.org/) 18.0.0 以上（一部の依存関係に必要）
-
-### 開発サーバーの起動
-
+3. オプション:
 ```bash
-deno task dev
+# テーマを指定して変換
+./bin/md2jsx --theme github input.md
+
+# OGP機能を有効にして変換
+./bin/md2jsx --ogp input.md
+
+# 利用可能なテーマ: light, dark, sepia, nord, github, dracula
 ```
 
-### ビルド
+変換されたHTMLファイルは `input.html` として同じディレクトリに出力されます。
 
-```bash
-deno task build
-```
+## サポートされるMarkdown機能
 
-## TODO
+- 見出し（h1-h6）
+- 段落と強調（太字、斜体、取り消し線）
+- リスト（順序付き、順序なし、ネスト、チェックボックス付き）
+- シンタックスハイライト付きコードブロック
+- テーブル
+- 引用文（出典サポート付き）
+- 水平線
+- リンクと画像
+- OGPカード（スタンドアロンリンク）
 
-- [ ] クリップボード機能の追加
-- [ ] より多くのマークダウン拡張機能のサポート
-- [ ] カスタムテーマエディタ
-- [ ] エクスポートオプションの拡張
+## 技術スタック
 
-## ライセンス
-
-MIT
-
-## 貢献
-
-プルリクエストは歓迎します。大きな変更を行う場合は、まず問題を開いて議論してください。
+- Deno
+- React 19
+- HonoX
+- Vite
+- TypeScript

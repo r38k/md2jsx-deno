@@ -7,6 +7,8 @@
 
 import React, { JSX, useMemo } from 'react';
 import { tokenizeCode, Theme as HighlighterTheme } from '../components/syntax/SyntaxHighlighter.tsx';
+import { type OGPInfo } from '../utils/ogp.ts';
+import OGPCard from './OGPCard.tsx';
 
 /**
  * テーマの型定義
@@ -132,6 +134,7 @@ interface MarkdownToJsxProps {
   markdown: string;
   themeName?: ThemeName; // テーマ名
   customTheme?: Theme; // カスタムテーマのオプションプロパティ
+  ogpData?: Map<string, OGPInfo>; // OGPデータのマップ
 }
 
 /**
@@ -188,7 +191,7 @@ const Strikethrough: React.FC<{ text: string; theme: Theme }> = ({ text, theme }
 /**
  * リンクコンポーネント
  */
-const Link: React.FC<{ text: string; url: string; theme: Theme }> = ({ text, url, theme }) => {
+const Link: React.FC<{ text: string; url: string; theme: Theme; ogpInfo?: OGPInfo | null; isStandalone?: boolean }> = ({ text, url, theme, ogpInfo, isStandalone = false }) => {
   const style = {
     color: theme.linkColor,
     textDecoration: 'underline' as const,
@@ -196,6 +199,11 @@ const Link: React.FC<{ text: string; url: string; theme: Theme }> = ({ text, url
   
   // URLのサニタイズ (javascript: プロトコルなどを防止)
   const sanitizedUrl = url.startsWith('javascript:') ? '#' : url;
+  
+  // スタンドアロンリンクでOGP情報がある場合はカード表示
+  if (isStandalone && ogpInfo && (ogpInfo.title || ogpInfo.description)) {
+    return <OGPCard url={sanitizedUrl} ogpInfo={ogpInfo} theme={theme} />;
+  }
   
   return (
     <a
@@ -551,7 +559,7 @@ type PatternType = 'code' | 'bold' | 'italic' | 'strikethrough' | 'link' | 'imag
 interface Pattern {
   type: PatternType;
   regex: RegExp;
-  process: (match: RegExpExecArray, theme: Theme) => JSX.Element;
+  process: (match: RegExpExecArray, theme: Theme, ogpData?: Map<string, OGPInfo>) => JSX.Element;
 }
 
 const patterns: Pattern[] = [
@@ -598,12 +606,14 @@ const patterns: Pattern[] = [
   { 
     type: 'link', 
     regex: /\[([^\]]+?)\]\(([^)]+?)\)/g, 
-    process: (match: RegExpExecArray, theme: Theme) => 
+    process: (match: RegExpExecArray, theme: Theme, ogpData?: Map<string, OGPInfo>) => 
       <Link 
         key={`link-${Math.random().toString(36).substring(2)}`} 
         text={match[1]} 
         url={match[2]} 
-        theme={theme} 
+        theme={theme}
+        ogpInfo={ogpData?.get(match[2])}
+        isStandalone={false}
       />
   },
   { 
@@ -620,7 +630,7 @@ const patterns: Pattern[] = [
   }
 ];
 
-const parseInlineMarkdown = (text: string, theme: Theme): (string | JSX.Element)[] => {
+const parseInlineMarkdown = (text: string, theme: Theme, ogpData?: Map<string, OGPInfo>): (string | JSX.Element)[] => {
   // テキストを分割して処理
   let result: (string | JSX.Element)[] = [text];
 
@@ -653,7 +663,7 @@ const parseInlineMarkdown = (text: string, theme: Theme): (string | JSX.Element)
         }
 
         // マッチした部分をJSX要素に変換
-        parts.push(pattern.process(match, theme));
+        parts.push(pattern.process(match, theme, ogpData));
 
         lastIndex = startIndex + matchedText.length;
       }
@@ -681,7 +691,7 @@ const parseInlineMarkdown = (text: string, theme: Theme): (string | JSX.Element)
 /**
  * Markdownをパースし、適切なJSX要素のグループを返す
  */
-const parseMarkdown = (markdown: string, theme: Theme): JSX.Element[] => {
+const parseMarkdown = (markdown: string, theme: Theme, ogpData?: Map<string, OGPInfo>): JSX.Element[] => {
   const lines = markdown.split('\n');
   const jsxElements: JSX.Element[] = [];
 
@@ -772,15 +782,15 @@ const parseMarkdown = (markdown: string, theme: Theme): JSX.Element[] => {
     }
     // 見出し
     else if (trimmedLine.startsWith('### ')) {
-      const headingContent = parseInlineMarkdown(trimmedLine.substring(4), theme);
+      const headingContent = parseInlineMarkdown(trimmedLine.substring(4), theme, ogpData);
       jsxElements.push(<Heading key={`h3-${i}`} level={3} theme={theme}>{headingContent}</Heading>);
     }
     else if (trimmedLine.startsWith('## ')) {
-      const headingContent = parseInlineMarkdown(trimmedLine.substring(3), theme);
+      const headingContent = parseInlineMarkdown(trimmedLine.substring(3), theme, ogpData);
       jsxElements.push(<Heading key={`h2-${i}`} level={2} theme={theme}>{headingContent}</Heading>);
     }
     else if (trimmedLine.startsWith('# ')) {
-      const headingContent = parseInlineMarkdown(trimmedLine.substring(2), theme);
+      const headingContent = parseInlineMarkdown(trimmedLine.substring(2), theme, ogpData);
       jsxElements.push(<Heading key={`h1-${i}`} level={1} theme={theme}>{headingContent}</Heading>);
     }
     // 引用
@@ -790,11 +800,9 @@ const parseMarkdown = (markdown: string, theme: Theme): JSX.Element[] => {
       let j = i + 1;
       let source: string | undefined = undefined;
 
-      const _line = lines[j] ?? '';
-      
       // 引用が複数行続くか確認
-      while (j < lines.length && _line.trim().startsWith('>')) {
-        const quoteLine = _line.trim().substring(1).trim();
+      while (j < lines.length && lines[j] && lines[j].trim().startsWith('>')) {
+        const quoteLine = lines[j].trim().substring(1).trim();
         
         // 引用元の特殊な形式をチェック（「-- 」または「― 」で始まる行）
         if (quoteLine.match(/^(--|—|―)\s+(.+)$/)) {
@@ -812,7 +820,7 @@ const parseMarkdown = (markdown: string, theme: Theme): JSX.Element[] => {
         i = j - 1;
       }
       
-      const parsedContent = parseInlineMarkdown(quoteContent, theme);
+      const parsedContent = parseInlineMarkdown(quoteContent, theme, ogpData);
       jsxElements.push(
         <Blockquote key={`quote-${i}`} theme={theme} source={source}>
           {parsedContent}
@@ -828,7 +836,7 @@ const parseMarkdown = (markdown: string, theme: Theme): JSX.Element[] => {
       const checked = line.includes('[x]');
       const match = line.match(/^\s*- \[(x| )\] (.*)/);
       if (match) {
-        const textContent = parseInlineMarkdown(match[2] ?? '', theme);
+        const textContent = parseInlineMarkdown(match[2] ?? '', theme, ogpData);
         
         // リスト開始または継続
         if (!inList) {
@@ -873,7 +881,7 @@ const parseMarkdown = (markdown: string, theme: Theme): JSX.Element[] => {
       
       const match = line.match(/^\s*[-*+] (.*)/);
       if (match) {
-        const listItemContent = parseInlineMarkdown(match[1] ?? '', theme);
+        const listItemContent = parseInlineMarkdown(match[1] ?? '', theme, ogpData);
         
         // リスト開始または継続
         if (!inList) {
@@ -917,7 +925,7 @@ const parseMarkdown = (markdown: string, theme: Theme): JSX.Element[] => {
       
       const match = line.match(/^\s*\d+\. (.*)/);
       if (match) {
-        const listItemContent = parseInlineMarkdown(match[1] ?? '', theme);
+        const listItemContent = parseInlineMarkdown(match[1] ?? '', theme, ogpData);
         
         // リスト開始または継続
         if (!inList) {
@@ -979,7 +987,7 @@ const parseMarkdown = (markdown: string, theme: Theme): JSX.Element[] => {
       
       // 行を作成
       const cellElements = cells.map((cell, cellIdx) => {
-        const cellContent = parseInlineMarkdown(cell, theme);
+        const cellContent = parseInlineMarkdown(cell, theme, ogpData);
         return isHeaderRow 
           ? <TableHeaderCell key={`th-${cellIdx}`} theme={theme}>{cellContent}</TableHeaderCell>
           : <TableDataCell key={`td-${cellIdx}`} theme={theme}>{cellContent}</TableDataCell>;
@@ -989,8 +997,43 @@ const parseMarkdown = (markdown: string, theme: Theme): JSX.Element[] => {
     }
     // 段落（デフォルト）
     else if (trimmedLine !== '') {
-      // 段落の処理
-      const paragraphContent = parseInlineMarkdown(trimmedLine, theme);
+      // スタンドアロンリンクのチェック（段落全体が単一のリンクの場合）
+      const standaloneLinkMatch = trimmedLine.match(/^\[([^\]]+?)\]\(([^)]+?)\)$/);      
+      if (standaloneLinkMatch) {
+        // スタンドアロンリンクの場合
+        const url = standaloneLinkMatch[2];
+        const ogpInfo = ogpData?.get(url);
+        
+        // OGP情報がある場合は直接カードを配置、ない場合は段落内にリンク
+        if (ogpInfo && (ogpInfo.title || ogpInfo.description)) {
+          jsxElements.push(
+            <Link 
+              key={`link-${i}`}
+              text={standaloneLinkMatch[1]} 
+              url={url} 
+              theme={theme}
+              ogpInfo={ogpInfo}
+              isStandalone={true}
+            />
+          );
+        } else {
+          jsxElements.push(
+            <Paragraph key={`p-${i}`} theme={theme}>
+              <Link 
+                text={standaloneLinkMatch[1]} 
+                url={url} 
+                theme={theme}
+                ogpInfo={ogpInfo}
+                isStandalone={false}
+              />
+            </Paragraph>
+          );
+        }
+        continue;
+      }
+      
+      // 通常の段落処理
+      const paragraphContent = parseInlineMarkdown(trimmedLine, theme, ogpData);
       
       // 前の要素が段落かどうかチェック
       const lastIndex = jsxElements.length - 1;
@@ -1075,7 +1118,7 @@ const parseMarkdown = (markdown: string, theme: Theme): JSX.Element[] => {
  * メインのMarkdownToJsxコンポーネント
  * パフォーマンス向上のためにuseMemoを使用
  */
-const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({ markdown, themeName = 'dark', customTheme }) => {
+const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({ markdown, themeName = 'dark', customTheme, ogpData }) => {
   // テーマの選択
   const theme = customTheme || themes[themeName] || themes.dark;
   
@@ -1089,7 +1132,7 @@ const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({ markdown, themeName = 'da
   };
   
   // メモ化によりパフォーマンスを向上
-  const jsxElements = useMemo(() => parseMarkdown(markdown, theme), [markdown, theme]);
+  const jsxElements = useMemo(() => parseMarkdown(markdown, theme, ogpData), [markdown, theme, ogpData]);
   
   return (
     <div style={containerStyle}>

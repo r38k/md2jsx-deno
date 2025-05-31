@@ -1,7 +1,12 @@
 import { createRoute } from 'honox/factory'
-import MarkdownToJsx from '../components/MarkdownToJsx' // Import the component
+import MarkdownToJsx from '../components/MarkdownToJsx.tsx' // Import the component
+import Header from '../components/Header.tsx'
+import { prepareOGPData } from '../utils/prepareOgp.ts'
 
-export default createRoute((c) => {
+export default createRoute(async (c) => {
+  const themeName = (c.req.query('theme') || 'dark') as 'light' | 'dark' | 'sepia' | 'nord' | 'github' | 'dracula';
+  const enableOGP = c.req.query('ogp') === 'true';
+  
   // 拡張されたサンプルMarkdown - 新しい機能を含む
   const sampleMd = `# Markdown変換デモ
 ## 基本的な書式
@@ -38,6 +43,10 @@ export default createRoute((c) => {
 ### リンクと画像
 
 [外部リンク](https://example.com)
+
+[GitHub - 世界最大の開発プラットフォーム](https://github.com)
+
+[Stack Overflow - 開発者向けQ&Aサイト](https://stackoverflow.com)
 
 ![](/cat_icon_600.jpg)
 
@@ -101,15 +110,33 @@ $$
 </div>
 `
 
+  // OGPデータを事前に取得
+  const ogpData = enableOGP ? await prepareOGPData(sampleMd) : undefined;
+
+  const themeBackgrounds = {
+    light: 'bg-gray-50',
+    dark: 'bg-gray-900',
+    sepia: 'bg-amber-50',
+    nord: 'bg-slate-800',
+    github: 'bg-gray-50',
+    dracula: 'bg-purple-900',
+  };
+
+  const bgClass = themeBackgrounds[themeName as keyof typeof themeBackgrounds] || 'bg-gray-50';
+
   return c.render(
-    <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">MarkdownToJsx デモ</h1>
-      <div className="border rounded-lg shadow-sm ">
-        <MarkdownToJsx markdown={sampleMd} themeName="dark" />
+    <div className={`min-h-screen ${bgClass}`}>
+      <div className="max-w-6xl mx-auto p-6">
+        <Header currentTheme={themeName} enableOGP={enableOGP} />
+        
+        <div className="rounded-lg shadow-sm overflow-hidden">
+          <MarkdownToJsx markdown={sampleMd} themeName={themeName} ogpData={ogpData} />
+        </div>
+        
+        <footer className="mt-8 text-center text-gray-500 text-sm">
+          <p>Markdown to JSX コンバーター - 2025</p>
+        </footer>
       </div>
-      <footer className="mt-8 text-center text-gray-500 text-sm">
-        <p>Markdown to JSX コンバーター - 2025</p>
-      </footer>
     </div>
   )
 })
