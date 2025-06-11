@@ -27,7 +27,8 @@ export default createRoute(async (c) => {
 #### 箇条書きリスト
 - リストアイテム 1
 - リストアイテム 2
-  - ネストされたアイテム
+  - ネストされたアイテム1
+  - ネストされたアイテム2
 - リストアイテム 3
 
 #### 番号付きリスト
@@ -130,7 +131,7 @@ $$
         <Header currentTheme={themeName} enableOGP={enableOGP} />
         
         <div className="rounded-lg shadow-sm overflow-hidden">
-          <MarkdownToJsx markdown={sampleMd} themeName={themeName} ogpData={ogpData} />
+          <MarkdownToJsx markdown={sampleMd} themeName={themeName} /*ogpData={ogpData}*/ />
         </div>
         
         <footer className="mt-8 text-center text-gray-500 text-sm">
