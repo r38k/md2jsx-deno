@@ -619,7 +619,7 @@ const renderAstNode = (
                     {renderChildren(node as Parent, theme)}
                 </Paragraph>
             );
-        case "heading":
+        case "heading": {
             // Headingコンポーネントが受け付けるlevelは1-4のため調整
             const level = Math.min(Math.max(node.depth, 1), 4) as 1 | 2 | 3 | 4;
             return (
@@ -627,6 +627,7 @@ const renderAstNode = (
                     {renderChildren(node as Parent, theme)}
                 </Heading>
             );
+        }
         case "thematicBreak":
             return <HorizontalRule theme={theme} key={key} />;
         case "blockquote":
@@ -635,13 +636,14 @@ const renderAstNode = (
                     {renderChildren(node as Parent, theme)}
                 </Blockquote>
             );
-        case "list":
+        case "list": {
             const ListComponent = node.ordered ? OrderedList : UnorderedList;
             return (
                 <ListComponent theme={theme} key={key}>
                     {renderChildren(node as Parent, theme)}
                 </ListComponent>
             );
+        }
         case "listItem": {
             const listItemNode = node as Parent & { checked?: boolean };
 
@@ -699,7 +701,7 @@ const renderAstNode = (
                 );
             }
         } // ブロックスコープ終了
-        case "table":
+        case "table": {
             const headerRow = node.children[0];
             const bodyRows = node.children.slice(1);
             return (
@@ -714,19 +716,21 @@ const renderAstNode = (
                     </TableBody>
                 </Table>
             );
+        }
         case "tableRow":
             return (
                 <TableRow theme={theme} key={key}>
                     {renderChildren(node as Parent, theme)}
                 </TableRow>
             );
-        case "tableCell":
+        case "tableCell": {
             const CellComponent = TableDataCell;
             return (
                 <CellComponent theme={theme} key={key}>
                     {renderChildren(node as Parent, theme)}
                 </CellComponent>
             );
+        }
         case "html":
             console.warn(
                 "Raw HTML rendering is disabled for security.",
@@ -842,7 +846,7 @@ const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({
     markdown,
     themeName = "myTheme",
     customTheme,
-    enableOGP = false,
+enableOGP = false,
 }) => {
     // テーマの選択
     const theme = customTheme || themes[themeName] || themes.dark;
