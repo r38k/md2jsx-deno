@@ -60,7 +60,7 @@ const highlightJavaScript = (code: string, theme: Theme): React.ReactNode[] => {
   const lines = code.split('\n');
   
   lines.forEach((line, lineIndex) => {
-    let currentIndex = 0;
+    const currentIndex = 0;
     const lineTokens: React.ReactNode[] = [];
     
     // コメント（行コメント）
@@ -98,7 +98,7 @@ const highlightJavaScript = (code: string, theme: Theme): React.ReactNode[] => {
     
     // 文字列、キーワード、関数呼び出し、プロパティなどを検出
     let remainingLine = line;
-    let segments: { text: string; style?: React.CSSProperties; }[] = [];
+    const segments: { text: string; style?: React.CSSProperties; }[] = [];
     
     // 文字列を検出
     const stringRegex = /(["'`])((?:\\.|[^\\])*?)\1/g;
@@ -120,19 +120,19 @@ const highlightJavaScript = (code: string, theme: Theme): React.ReactNode[] => {
         // console.logのような関数呼び出しを検出
         processedBeforeString = processedBeforeString.replace(
           /(\.)(\w+)(?=\s*\()/g,
-          (match, dot, name) => `${dot}###METHOD_START###${name}###METHOD_END###`
+          (_match, dot, name) => `${dot}###METHOD_START###${name}###METHOD_END###`
         );
         
         // 関数名を検出
         processedBeforeString = processedBeforeString.replace(
           /\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\s*\()/g,
-          (match, name) => `###FUNCTION_START###${name}###FUNCTION_END###`
+          (_match, name) => `###FUNCTION_START###${name}###FUNCTION_END###`
         );
         
         // プロパティを検出
         processedBeforeString = processedBeforeString.replace(
           /\.([a-zA-Z_$][a-zA-Z0-9_$]*)\b(?!\s*\()/g,
-          (match, name) => `.###PROPERTY_START###${name}###PROPERTY_END###`
+          (_match, name) => `.###PROPERTY_START###${name}###PROPERTY_END###`
         );
         
         // マーカーを実際のスタイル付きspanに置き換え
@@ -229,19 +229,19 @@ const highlightJavaScript = (code: string, theme: Theme): React.ReactNode[] => {
       // console.logのような関数呼び出しを検出
       processedRemaining = processedRemaining.replace(
         /(\.)(\w+)(?=\s*\()/g,
-        (match, dot, name) => `${dot}###METHOD_START###${name}###METHOD_END###`
+        (_match, dot, name) => `${dot}###METHOD_START###${name}###METHOD_END###`
       );
       
       // 関数名を検出
       processedRemaining = processedRemaining.replace(
         /\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\s*\()/g,
-        (match, name) => `###FUNCTION_START###${name}###FUNCTION_END###`
+        (_match, name) => `###FUNCTION_START###${name}###FUNCTION_END###`
       );
       
       // プロパティを検出
       processedRemaining = processedRemaining.replace(
         /\.([a-zA-Z_$][a-zA-Z0-9_$]*)\b(?!\s*\()/g,
-        (match, name) => `.###PROPERTY_START###${name}###PROPERTY_END###`
+        (_match, name) => `.###PROPERTY_START###${name}###PROPERTY_END###`
       );
       
       // マーカーを実際のスタイル付きspanに置き換え

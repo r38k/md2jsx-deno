@@ -1,5 +1,5 @@
 import { createRoute } from 'honox/factory'
-import MarkdownToJsx from '../components/MarkdownToJsx.tsx' // Import the component
+import MarkdownToJsx from '../components/MarkdownToJsx.tsx'
 import Header from '../components/Header.tsx'
 import { prepareOGPData } from '../utils/prepareOgp.ts'
 

@@ -5,7 +5,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   cacheDir: "node_modules/.vite",
-  ssr: { external: ["react", "react-dom"] },
+  ssr: { external: ["react", "react-dom", "remark-gfm", "remark-parse", "unified", "remark"] },
   esbuild: {
     jsx: "automatic",
     jsxImportSource: "react",
