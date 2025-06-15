@@ -131,7 +131,7 @@ $$
         <Header currentTheme={themeName} enableOGP={enableOGP} />
         
         <div className="rounded-lg shadow-sm overflow-hidden">
-          <MarkdownToJsx markdown={sampleMd} themeName={themeName} /*ogpData={ogpData}*/ />
+          <MarkdownToJsx markdown={sampleMd} themeName={themeName} enableOGP={enableOGP} ogpData={ogpData} />
         </div>
         
         <footer className="mt-8 text-center text-gray-500 text-sm">

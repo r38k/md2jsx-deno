@@ -60,7 +60,7 @@ const html = renderToStaticMarkup(
       <title>Markdown Export</title>
     </head>
     <body>
-      <MarkdownToJsx markdown={markdownText} themeName={themeName} ogpData={ogpData} />
+      <MarkdownToJsx markdown={markdownText} themeName={themeName} enableOGP={enableOGP} ogpData={ogpData} />
     </body>
   </html>
 );

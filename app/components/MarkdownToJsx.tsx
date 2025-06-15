@@ -13,9 +13,8 @@ import {
 import type { Parent } from "unist";
 import type { Root, Link as MdastLink, RootContent } from "mdast";
 import { markdownToAst } from "../utils/parser/markdownParser.ts";
-// OGP関連をコメントアウト
-// import { type OGPInfo } from '../utils/ogp.ts';
-// import OGPCard from './OGPCard.tsx';
+import { type OGPInfo } from '../utils/ogp.ts';
+import OGPCard from './OGPCard.tsx';
 
 /**
  * テーマの型定義
@@ -157,8 +156,7 @@ interface MarkdownToJsxProps {
     themeName?: keyof typeof themes | "light" | "dark";
     customTheme?: Theme;
     enableOGP?: boolean;
-    // OGPデータをコメントアウト
-    // ogpData?: Map<string, OGPInfo>;
+    ogpData?: Map<string, OGPInfo>;
 }
 
 /**
@@ -587,7 +585,12 @@ const TableDataCell: React.FC<{ children: React.ReactNode; theme: Theme }> = ({
 const renderAstNode = (
     node: RootContent | Root,
     theme: Theme,
-    index?: number
+    index?: number,
+    options?: {
+        enableOGP?: boolean;
+        ogpData?: Map<string, OGPInfo>;
+        parentNode?: RootContent | Root;
+    }
 ): React.ReactNode => {
     const key = `${node.type}-${index ?? "0"}`;
 
@@ -602,7 +605,7 @@ const renderAstNode = (
         currentTheme: Theme
     ): React.ReactNode[] => {
         return parent.children.map((child, i) =>
-            renderAstNode(child as RootContent, currentTheme, i)
+            renderAstNode(child as RootContent, currentTheme, i, options)
         );
     };
 
@@ -613,12 +616,37 @@ const renderAstNode = (
                     {renderChildren(node as Parent, theme)}
                 </React.Fragment>
             );
-        case "paragraph":
+        case "paragraph": {
+            const paragraphNode = node as Parent;
+            
+            // スタンドアロンリンクかチェック（段落内に単一のリンクのみ存在）
+            if (
+                options?.enableOGP &&
+                options?.ogpData &&
+                paragraphNode.children.length === 1 &&
+                paragraphNode.children[0].type === "link"
+            ) {
+                const linkNode = paragraphNode.children[0] as MdastLink;
+                const ogpInfo = options.ogpData.get(linkNode.url);
+                
+                if (ogpInfo) {
+                    return (
+                        <OGPCard
+                            url={linkNode.url}
+                            ogpInfo={ogpInfo}
+                            theme={theme}
+                            key={key}
+                        />
+                    );
+                }
+            }
+            
             return (
                 <Paragraph theme={theme} key={key}>
-                    {renderChildren(node as Parent, theme)}
+                    {renderChildren(paragraphNode, theme)}
                 </Paragraph>
             );
+        }
         case "heading": {
             // Headingコンポーネントが受け付けるlevelは1-4のため調整
             const level = Math.min(Math.max(node.depth, 1), 4) as 1 | 2 | 3 | 4;
@@ -846,7 +874,8 @@ const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({
     markdown,
     themeName = "myTheme",
     customTheme,
-enableOGP = false,
+    enableOGP = false,
+    ogpData,
 }) => {
     // テーマの選択
     const theme = customTheme || themes[themeName] || themes.dark;
@@ -866,8 +895,8 @@ enableOGP = false,
         // コンポーネント内部で AST を生成
         const ast = markdownToAst(markdown);
         // Rootノードからレンダリングを開始
-        return renderAstNode(ast, theme);
-    }, [markdown, theme]); // 依存配列を markdown に変更
+        return renderAstNode(ast, theme, 0, { enableOGP, ogpData });
+    }, [markdown, theme, enableOGP, ogpData]); // 依存配列を更新
 
     return <div style={containerStyle}>{jsxElements}</div>;
 };
