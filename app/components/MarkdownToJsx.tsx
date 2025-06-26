@@ -424,6 +424,7 @@ const Paragraph: React.FC<{ children: React.ReactNode; theme: Theme }> = ({
         margin: "1em 0",
 		paddingLeft: "10px",
         color: theme.textColor,
+        whiteSpace: "pre-wrap" as const,
     };
 
     return <p style={style}>{children}</p>;
