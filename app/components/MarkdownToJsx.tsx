@@ -167,8 +167,8 @@ const InlineCode: React.FC<{ code: string; theme: Theme }> = ({
     theme,
 }) => {
     const style = {
-        // backgroundColor: theme.codeBackgroundColor,
-        // color: theme.codeTextColor,
+        backgroundColor: theme.codeBackgroundColor,
+        color: theme.codeTextColor,
         padding: "2px 4px",
         borderRadius: "3px",
         fontFamily: "monospace",
@@ -761,10 +761,6 @@ const renderAstNode = (
             );
         }
         case "html":
-            console.warn(
-                "Raw HTML rendering is disabled for security.",
-                node.value
-            );
             return null;
         case "code":
             return (
@@ -888,6 +884,8 @@ const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({
         padding: "30px",
         borderRadius: "5px",
         transition: "all 0.3s ease",
+        maxWidth: "800px",
+        margin: "0 auto",
     };
 
     // メモ化によりパフォーマンスを向上 (Markdown文字列とテーマが変更された場合のみ再計算)

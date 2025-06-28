@@ -51,30 +51,22 @@ const markdownText = Deno.readTextFileSync(inputPath);
 // OGPデータを事前に取得
 const ogpData = enableOGP ? await prepareOGPData(markdownText) : undefined;
 
-// ReactコンポーネントをHTMLに変換
-const html = renderToStaticMarkup(
-  <html lang="ja">
-    <head>
-      <meta charSet="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Markdown Export</title>
-    </head>
-    <body>
-      <MarkdownToJsx markdown={markdownText} themeName={themeName} enableOGP={enableOGP} ogpData={ogpData} />
-    </body>
-  </html>
+// ReactコンポーネントをHTMLに変換（bodyの中身のみ）
+const bodyContent = renderToStaticMarkup(
+  <MarkdownToJsx markdown={markdownText} themeName={themeName} enableOGP={enableOGP} ogpData={ogpData} />
 );
 
-// 出力するHTML（<!DOCTYPE>を含む）
-const outputHTML = `<!DOCTYPE html>\n${html}`;
+// クリップボードにコピーするHTML（bodyの中身のみ）
+const outputHTML = bodyContent;
 
-const outputPath = path.join(
-  path.dirname(inputPath),
-  path.basename(inputPath, path.extname(inputPath)) + ".html",
-);
+// HTMLファイルエクスポート機能（コメントアウト）
+// const outputPath = path.join(
+//   path.dirname(inputPath),
+//   path.basename(inputPath, path.extname(inputPath)) + ".html",
+// );
 
-Deno.writeTextFileSync(outputPath, outputHTML);
-console.log(`Exported to ${outputPath}`);
+// Deno.writeTextFileSync(outputPath, outputHTML);
+// console.log(`Exported to ${outputPath}`);
 if (enableOGP) {
   console.log("OGP preview enabled for standalone links");
 }
