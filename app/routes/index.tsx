@@ -7,7 +7,7 @@ export default createRoute(async (c) => {
   const themeName = (c.req.query('theme') || 'dark') as 'light' | 'dark' | 'sepia' | 'nord' | 'github' | 'dracula';
   const enableOGP = c.req.query('ogp') === 'true';
   
-  // 拡張されたサンプルMarkdown - 新しい機能を含む
+  // 拡張されたサンプルMarkdown - 元の内容に追記
   const sampleMd = `# Markdown変換デモ
 ## 基本的な書式
 
@@ -109,7 +109,21 @@ $$
 <div style="color: red;">
   HTMLタグは部分的にサポートされています。
 </div>
-`
+
+### 注釈ブロックのサンプル
+
+::: NOTE info(使い方)
+このブロックは注釈として扱われます。
+複数段落にも対応します。
+
+- 箇条書きもOK
+- 強調やリンク [example](https://example.com) もOK
+
+:::
+
+---
+
+フッター: ここに連絡先や補足情報を置けます。`
 
   // OGPデータを事前に取得
   const ogpData = enableOGP ? await prepareOGPData(sampleMd) : undefined;

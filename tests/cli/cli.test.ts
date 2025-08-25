@@ -11,7 +11,7 @@ Deno.test("CLI preserves line breaks in markdown", async () => {
 
   // Run the CLI
   const command = new Deno.Command(binPath, {
-    args: [inputFile],
+    args: ["--out", inputFile],
   });
   
   const { success, stderr } = await command.output();
@@ -38,7 +38,7 @@ Deno.test("CLI preserves line breaks in paragraphs", async () => {
 
   // Run the CLI
   const command = new Deno.Command(binPath, {
-    args: [inputFile],
+    args: ["--out", inputFile],
   });
   
   await command.output();

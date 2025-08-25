@@ -32,7 +32,7 @@ deno task dev
 deno task build
 ```
 
-2. Markdownファイルを変換:
+2. Markdownファイルを変換（デフォルトはクリップボードにコピー）:
 ```bash
 ./bin/md2jsx input.md
 ```
@@ -46,9 +46,18 @@ deno task build
 ./bin/md2jsx --ogp input.md
 
 # 利用可能なテーマ: light, dark, sepia, nord, github, dracula
+
+# HTMLファイルとして出力（同名 .html を生成）
+./bin/md2jsx --out input.md
+
+# 出力先を明示（= で指定）
+./bin/md2jsx --out=./dist/output.html input.md
 ```
 
-変換されたHTMLファイルは `input.html` として同じディレクトリに出力されます。
+メモ:
+- クリップボードコピーは Linux では `xsel` を利用します（`sudo apt-get install xsel`）。
+- `--out` を付けない場合はクリップボードにコピーされます。
+- `--out` を付けた場合、既定では入力ファイルと同じディレクトリに `<name>.html` として書き出します。
 
 ## サポートされるMarkdown機能
 

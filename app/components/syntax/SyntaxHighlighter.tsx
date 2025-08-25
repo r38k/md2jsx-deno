@@ -60,7 +60,6 @@ const highlightJavaScript = (code: string, theme: Theme): React.ReactNode[] => {
   const lines = code.split('\n');
   
   lines.forEach((line, lineIndex) => {
-    const currentIndex = 0;
     const lineTokens: React.ReactNode[] = [];
     
     // コメント（行コメント）
@@ -68,9 +67,7 @@ const highlightJavaScript = (code: string, theme: Theme): React.ReactNode[] => {
     if (lineCommentMatch && lineCommentMatch.index !== undefined) {
       if (lineCommentMatch.index > 0) {
         lineTokens.push(
-          <span key={`code-${lineIndex}-${currentIndex}`}>
-            {line.substring(0, lineCommentMatch.index)}
-          </span>
+          ...processJSLine(line.substring(0, lineCommentMatch.index), theme, `${lineIndex}-before-comment`)
         );
       }
       
@@ -93,236 +90,12 @@ const highlightJavaScript = (code: string, theme: Theme): React.ReactNode[] => {
       return;
     }
     
-    // キーワード
-    const keywords = ['const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while', 'class', 'import', 'export', 'from', 'try', 'catch', 'throw', 'new', 'this', 'super', 'extends', 'implements', 'interface', 'type', 'enum', 'public', 'private', 'protected', 'static', 'async', 'await', 'yield', 'true', 'false', 'null', 'undefined'];
-    
-    // 文字列、キーワード、関数呼び出し、プロパティなどを検出
-    let remainingLine = line;
-    const segments: { text: string; style?: React.CSSProperties; }[] = [];
-    
-    // 文字列を検出
-    const stringRegex = /(["'`])((?:\\.|[^\\])*?)\1/g;
-    let stringMatch;
-    while ((stringMatch = stringRegex.exec(remainingLine)) !== null) {
-      if (stringMatch.index > 0) {
-        const beforeString = remainingLine.substring(0, stringMatch.index);
-        
-        // キーワードを検出
-        let processedBeforeString = beforeString;
-        keywords.forEach(keyword => {
-          const keywordRegex = new RegExp(`\\b${keyword}\\b`, 'g');
-          processedBeforeString = processedBeforeString.replace(
-            keywordRegex, 
-            match => `###KEYWORD_START###${match}###KEYWORD_END###`
-          );
-        });
-        
-        // console.logのような関数呼び出しを検出
-        processedBeforeString = processedBeforeString.replace(
-          /(\.)(\w+)(?=\s*\()/g,
-          (_match, dot, name) => `${dot}###METHOD_START###${name}###METHOD_END###`
-        );
-        
-        // 関数名を検出
-        processedBeforeString = processedBeforeString.replace(
-          /\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\s*\()/g,
-          (_match, name) => `###FUNCTION_START###${name}###FUNCTION_END###`
-        );
-        
-        // プロパティを検出
-        processedBeforeString = processedBeforeString.replace(
-          /\.([a-zA-Z_$][a-zA-Z0-9_$]*)\b(?!\s*\()/g,
-          (_match, name) => `.###PROPERTY_START###${name}###PROPERTY_END###`
-        );
-        
-        // マーカーを実際のスタイル付きspanに置き換え
-        const parts = processedBeforeString.split(/###(KEYWORD|METHOD|FUNCTION|PROPERTY)_(START|END)###/);
-        let currentStyle: string | null = null;
-        let currentText = '';
-        
-        for (let i = 0; i < parts.length; i++) {
-          if (parts[i] === 'KEYWORD' && parts[i+1] === 'START') {
-            if (currentText) {
-              segments.push({ text: currentText });
-              currentText = '';
-            }
-            currentStyle = 'KEYWORD';
-            i += 1;
-          } else if (parts[i] === 'METHOD' && parts[i+1] === 'START') {
-            if (currentText) {
-              segments.push({ text: currentText });
-              currentText = '';
-            }
-            currentStyle = 'METHOD';
-            i += 1;
-          } else if (parts[i] === 'FUNCTION' && parts[i+1] === 'START') {
-            if (currentText) {
-              segments.push({ text: currentText });
-              currentText = '';
-            }
-            currentStyle = 'FUNCTION';
-            i += 1;
-          } else if (parts[i] === 'PROPERTY' && parts[i+1] === 'START') {
-            if (currentText) {
-              segments.push({ text: currentText });
-              currentText = '';
-            }
-            currentStyle = 'PROPERTY';
-            i += 1;
-          } else if ((parts[i] === 'KEYWORD' || parts[i] === 'METHOD' || parts[i] === 'FUNCTION' || parts[i] === 'PROPERTY') && parts[i+1] === 'END') {
-            if (currentStyle === 'KEYWORD') {
-              segments.push({ 
-                text: currentText, 
-                style: { color: isDark ? '#569CD6' : '#0000ff' } 
-              });
-            } else if (currentStyle === 'METHOD') {
-              segments.push({ 
-                text: currentText, 
-                style: { color: isDark ? '#DCDCAA' : '#795E26' } 
-              });
-            } else if (currentStyle === 'FUNCTION') {
-              segments.push({ 
-                text: currentText, 
-                style: { color: isDark ? '#DCDCAA' : '#795E26' } 
-              });
-            } else if (currentStyle === 'PROPERTY') {
-              segments.push({ 
-                text: currentText, 
-                style: { color: isDark ? '#9CDCFE' : '#001080' } 
-              });
-            }
-            currentStyle = null;
-            currentText = '';
-            i += 1;
-          } else if (parts[i]) {
-            currentText += parts[i];
-          }
-        }
-        
-        if (currentText) {
-          segments.push({ text: currentText });
-        }
-      }
-      
-      // 文字列を追加
-      segments.push({ 
-        text: stringMatch[0], 
-        style: { color: isDark ? '#CE9178' : '#a31515' } 
-      });
-      
-      remainingLine = remainingLine.substring(stringMatch.index + stringMatch[0].length);
-      stringRegex.lastIndex = 0;
-    }
-    
-    // 残りの部分を処理
-    if (remainingLine) {
-      // キーワードを検出
-      let processedRemaining = remainingLine;
-      keywords.forEach(keyword => {
-        const keywordRegex = new RegExp(`\\b${keyword}\\b`, 'g');
-        processedRemaining = processedRemaining.replace(
-          keywordRegex, 
-          match => `###KEYWORD_START###${match}###KEYWORD_END###`
-        );
-      });
-      
-      // console.logのような関数呼び出しを検出
-      processedRemaining = processedRemaining.replace(
-        /(\.)(\w+)(?=\s*\()/g,
-        (_match, dot, name) => `${dot}###METHOD_START###${name}###METHOD_END###`
-      );
-      
-      // 関数名を検出
-      processedRemaining = processedRemaining.replace(
-        /\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\s*\()/g,
-        (_match, name) => `###FUNCTION_START###${name}###FUNCTION_END###`
-      );
-      
-      // プロパティを検出
-      processedRemaining = processedRemaining.replace(
-        /\.([a-zA-Z_$][a-zA-Z0-9_$]*)\b(?!\s*\()/g,
-        (_match, name) => `.###PROPERTY_START###${name}###PROPERTY_END###`
-      );
-      
-      // マーカーを実際のスタイル付きspanに置き換え
-      const parts = processedRemaining.split(/###(KEYWORD|METHOD|FUNCTION|PROPERTY)_(START|END)###/);
-      let currentStyle: string | null = null;
-      let currentText = '';
-      
-      for (let i = 0; i < parts.length; i++) {
-        if (parts[i] === 'KEYWORD' && parts[i+1] === 'START') {
-          if (currentText) {
-            segments.push({ text: currentText });
-            currentText = '';
-          }
-          currentStyle = 'KEYWORD';
-          i += 1;
-        } else if (parts[i] === 'METHOD' && parts[i+1] === 'START') {
-          if (currentText) {
-            segments.push({ text: currentText });
-            currentText = '';
-          }
-          currentStyle = 'METHOD';
-          i += 1;
-        } else if (parts[i] === 'FUNCTION' && parts[i+1] === 'START') {
-          if (currentText) {
-            segments.push({ text: currentText });
-            currentText = '';
-          }
-          currentStyle = 'FUNCTION';
-          i += 1;
-        } else if (parts[i] === 'PROPERTY' && parts[i+1] === 'START') {
-          if (currentText) {
-            segments.push({ text: currentText });
-            currentText = '';
-          }
-          currentStyle = 'PROPERTY';
-          i += 1;
-        } else if ((parts[i] === 'KEYWORD' || parts[i] === 'METHOD' || parts[i] === 'FUNCTION' || parts[i] === 'PROPERTY') && parts[i+1] === 'END') {
-          if (currentStyle === 'KEYWORD') {
-            segments.push({ 
-              text: currentText, 
-              style: { color: isDark ? '#569CD6' : '#0000ff' } 
-            });
-          } else if (currentStyle === 'METHOD') {
-            segments.push({ 
-              text: currentText, 
-              style: { color: isDark ? '#DCDCAA' : '#795E26' } 
-            });
-          } else if (currentStyle === 'FUNCTION') {
-            segments.push({ 
-              text: currentText, 
-              style: { color: isDark ? '#DCDCAA' : '#795E26' } 
-            });
-          } else if (currentStyle === 'PROPERTY') {
-            segments.push({ 
-              text: currentText, 
-              style: { color: isDark ? '#9CDCFE' : '#001080' } 
-            });
-          }
-          currentStyle = null;
-          currentText = '';
-          i += 1;
-        } else if (parts[i]) {
-          currentText += parts[i];
-        }
-      }
-      
-      if (currentText) {
-        segments.push({ text: currentText });
-      }
-    }
-    
-    // セグメントをJSX要素に変換
-    const jsxSegments = segments.map((segment, i) => (
-      <span key={`segment-${lineIndex}-${i}`} style={segment.style}>
-        {segment.text}
-      </span>
-    ));
+    // 通常の行処理
+    lineTokens.push(...processJSLine(line, theme, `${lineIndex}`));
     
     result.push(
       <span key={`line-${lineIndex}`}>
-        {jsxSegments}
+        {lineTokens}
         {lineIndex < lines.length - 1 ? '\n' : ''}
       </span>
     );
@@ -332,13 +105,148 @@ const highlightJavaScript = (code: string, theme: Theme): React.ReactNode[] => {
 };
 
 /**
+ * JavaScript行の処理
+ */
+const processJSLine = (line: string, theme: Theme, keyPrefix: string): React.ReactNode[] => {
+  const isDark = isDarkTheme(theme);
+  const segments: React.ReactNode[] = [];
+  
+  // キーワード
+  const keywords = ['const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while', 'class', 'import', 'export', 'from', 'try', 'catch', 'throw', 'new', 'this', 'super', 'extends', 'implements', 'interface', 'type', 'enum', 'public', 'private', 'protected', 'static', 'async', 'await', 'yield', 'true', 'false', 'null', 'undefined'];
+  
+  let remainingLine = line;
+  let segmentIndex = 0;
+  
+  // 文字列を先に検出
+  const stringMatches: Array<{ match: RegExpMatchArray; index: number }> = [];
+  const stringRegex = /(["'`])((?:\\.|[^\\])*?)\1/g;
+  let stringMatch;
+  while ((stringMatch = stringRegex.exec(line)) !== null) {
+    stringMatches.push({ match: stringMatch, index: stringMatch.index });
+  }
+  
+  let currentPos = 0;
+  
+  stringMatches.forEach(({ match, index }) => {
+    // 文字列前の部分を処理
+    if (index > currentPos) {
+      const beforeString = line.substring(currentPos, index);
+      segments.push(...processNonStringPart(beforeString, keywords, theme, `${keyPrefix}-${segmentIndex++}`));
+    }
+    
+    // 文字列を追加
+    segments.push(
+      <span 
+        key={`${keyPrefix}-string-${segmentIndex++}`} 
+        style={{ color: isDark ? '#CE9178' : '#a31515' }}
+      >
+        {match[0]}
+      </span>
+    );
+    
+    currentPos = index + match[0].length;
+  });
+  
+  // 残りの部分を処理
+  if (currentPos < line.length) {
+    const remaining = line.substring(currentPos);
+    segments.push(...processNonStringPart(remaining, keywords, theme, `${keyPrefix}-${segmentIndex++}`));
+  }
+  
+  return segments;
+};
+
+/**
+ * 文字列以外の部分を処理
+ */
+const processNonStringPart = (text: string, keywords: string[], theme: Theme, keyPrefix: string): React.ReactNode[] => {
+  const isDark = isDarkTheme(theme);
+  const segments: React.ReactNode[] = [];
+  
+  let processedText = text;
+  
+  // キーワードを処理
+  keywords.forEach(keyword => {
+    const keywordRegex = new RegExp(`\\b${keyword}\\b`, 'g');
+    processedText = processedText.replace(
+      keywordRegex, 
+      match => `###KEYWORD_START###${match}###KEYWORD_END###`
+    );
+  });
+  
+  // 関数呼び出しを処理
+  processedText = processedText.replace(
+    /\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\s*\()/g,
+    (match, name) => `###FUNCTION_START###${name}###FUNCTION_END###`
+  );
+  
+  // メソッド呼び出しを処理
+  processedText = processedText.replace(
+    /(\.)\s*([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\s*\()/g,
+    (match, dot, name) => `${dot}###METHOD_START###${name}###METHOD_END###`
+  );
+  
+  // プロパティアクセスを処理
+  processedText = processedText.replace(
+    /(\.)\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\b(?!\s*\()/g,
+    (match, dot, name) => `${dot}###PROPERTY_START###${name}###PROPERTY_END###`
+  );
+  
+  // マーカーを解析してセグメントに変換
+  const parts = processedText.split(/###(KEYWORD|FUNCTION|METHOD|PROPERTY)_(START|END)###/);
+  let currentStyle: string | null = null;
+  let currentText = '';
+  let segmentIndex = 0;
+  
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    
+    if (['KEYWORD', 'FUNCTION', 'METHOD', 'PROPERTY'].includes(part) && parts[i + 1] === 'START') {
+      if (currentText) {
+        segments.push(<span key={`${keyPrefix}-text-${segmentIndex++}`}>{currentText}</span>);
+        currentText = '';
+      }
+      currentStyle = part;
+      i++;
+    } else if (['KEYWORD', 'FUNCTION', 'METHOD', 'PROPERTY'].includes(part) && parts[i + 1] === 'END') {
+      if (currentStyle && currentText) {
+        let style: React.CSSProperties = {};
+        
+        if (currentStyle === 'KEYWORD') {
+          style = { color: isDark ? '#569CD6' : '#0000ff' };
+        } else if (currentStyle === 'FUNCTION' || currentStyle === 'METHOD') {
+          style = { color: isDark ? '#DCDCAA' : '#795E26' };
+        } else if (currentStyle === 'PROPERTY') {
+          style = { color: isDark ? '#9CDCFE' : '#001080' };
+        }
+        
+        segments.push(
+          <span key={`${keyPrefix}-${currentStyle.toLowerCase()}-${segmentIndex++}`} style={style}>
+            {currentText}
+          </span>
+        );
+      }
+      currentStyle = null;
+      currentText = '';
+      i++;
+    } else if (part) {
+      currentText += part;
+    }
+  }
+  
+  if (currentText) {
+    segments.push(<span key={`${keyPrefix}-final-${segmentIndex++}`}>{currentText}</span>);
+  }
+  
+  return segments;
+};
+
+/**
  * CSSのハイライト
  */
 const highlightCSS = (code: string, theme: Theme): React.ReactNode[] => {
   const isDark = isDarkTheme(theme);
   const result: React.ReactNode[] = [];
-  
-  // 行ごとに処理
   const lines = code.split('\n');
   
   lines.forEach((line, lineIndex) => {
@@ -346,7 +254,6 @@ const highlightCSS = (code: string, theme: Theme): React.ReactNode[] => {
     
     // コメント
     if (line.includes('/*') || line.includes('*/')) {
-      // コメント行はそのまま色を適用
       lineTokens.push(
         <span 
           key={`comment-${lineIndex}`} 
@@ -377,68 +284,12 @@ const highlightCSS = (code: string, theme: Theme): React.ReactNode[] => {
         );
         
         const afterProp = line.substring(propertyMatch.index + propertyMatch[1].length);
-        
-        // 色コード
-        const colorMatch = afterProp.match(/(:\s*)(#[a-fA-F0-9]{3,8})\b/);
-        if (colorMatch && colorMatch.index !== undefined) {
-          lineTokens.push(
-            <span key={`colon-${lineIndex}`}>
-              {afterProp.substring(0, colorMatch.index + colorMatch[1].length)}
-            </span>
-          );
-          
-          lineTokens.push(
-            <span 
-              key={`color-${lineIndex}`} 
-              style={{ color: isDark ? '#CE9178' : '#a31515' }}
-            >
-              {colorMatch[2]}
-            </span>
-          );
-          
-          if (colorMatch.index + colorMatch[0].length < afterProp.length) {
-            lineTokens.push(
-              <span key={`after-color-${lineIndex}`}>
-                {afterProp.substring(colorMatch.index + colorMatch[0].length)}
-              </span>
-            );
-          }
-        } else {
-          // 単位付き数値
-          const unitMatch = afterProp.match(/(:\s*)(\d+)(px|em|rem|vh|vw|%|s|ms|deg|rad|fr)\b/);
-          if (unitMatch && unitMatch.index !== undefined) {
-            lineTokens.push(
-              <span key={`colon-${lineIndex}`}>
-                {afterProp.substring(0, unitMatch.index + unitMatch[1].length)}
-              </span>
-            );
-            
-            lineTokens.push(
-              <span 
-                key={`number-${lineIndex}`} 
-                style={{ color: isDark ? '#B5CEA8' : '#098658' }}
-              >
-                {unitMatch[2] + unitMatch[3]}
-              </span>
-            );
-            
-            if (unitMatch.index + unitMatch[0].length < afterProp.length) {
-              lineTokens.push(
-                <span key={`after-unit-${lineIndex}`}>
-                  {afterProp.substring(unitMatch.index + unitMatch[0].length)}
-                </span>
-              );
-            }
-          } else {
-            lineTokens.push(
-              <span key={`after-prop-${lineIndex}`}>
-                {afterProp}
-              </span>
-            );
-          }
-        }
+        lineTokens.push(
+          <span key={`after-prop-${lineIndex}`}>
+            {afterProp}
+          </span>
+        );
       } else {
-        // セレクタや括弧
         lineTokens.push(
           <span key={`line-${lineIndex}`}>
             {line}
@@ -462,7 +313,6 @@ const highlightCSS = (code: string, theme: Theme): React.ReactNode[] => {
  * HTMLのハイライト
  */
 const highlightHTML = (code: string, theme: Theme): React.ReactNode[] => {
-  // 簡易実装
   return simpleHighlight(code, theme);
 };
 

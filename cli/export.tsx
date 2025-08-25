@@ -8,6 +8,8 @@ import { prepareOGPData } from "../app/utils/prepareOgp.ts";
 let inputPath: string | undefined;
 let enableOGP = false;
 let themeName: 'light' | 'dark' | 'sepia' | 'nord' | 'github' | 'dracula' = 'dark';
+let outputToFile = false;
+let outputPath: string | undefined;
 
 for (let i = 0; i < Deno.args.length; i++) {
   const arg = Deno.args[i];
@@ -21,16 +23,27 @@ for (let i = 0; i < Deno.args.length; i++) {
       console.error(`Invalid theme: ${theme}`);
       Deno.exit(1);
     }
+  } else if (arg === '--out' || arg === '-o') {
+    // Enable file output with default path (no argument consumed)
+    outputToFile = true;
+  } else if (arg.startsWith('--out=')) {
+    outputToFile = true;
+    outputPath = arg.substring('--out='.length);
+  } else if (arg.startsWith('-o=')) {
+    outputToFile = true;
+    outputPath = arg.substring('-o='.length);
   } else if (!inputPath) {
     inputPath = arg;
   }
 }
 
 if (!inputPath) {
-  console.error("Usage: deno run --allow-read --allow-write --allow-net cli/export.tsx [--ogp] [--theme <theme-name>] <markdown-file>");
+  console.error("Usage: deno run --allow-read --allow-write --allow-net --allow-run cli/export.tsx [--ogp] [--theme <theme-name>] [--out[=<file.html>]] <markdown-file>");
   console.error("Options:");
   console.error("  --ogp    Enable OGP preview for standalone links");
   console.error("  --theme  Theme name (light, dark, sepia, nord, github, dracula)");
+  console.error("  --out    Write HTML file instead of copying to clipboard");
+  console.error("           With =<file>, writes to the specified path");
   Deno.exit(1);
 }
 
@@ -56,44 +69,47 @@ const bodyContent = renderToStaticMarkup(
   <MarkdownToJsx markdown={markdownText} themeName={themeName} enableOGP={enableOGP} ogpData={ogpData} />
 );
 
-// クリップボードにコピーするHTML（bodyの中身のみ）
+// 出力するHTML（bodyの中身のみ）
 const outputHTML = bodyContent;
 
-// HTMLファイルエクスポート機能（コメントアウト）
-// const outputPath = path.join(
-//   path.dirname(inputPath),
-//   path.basename(inputPath, path.extname(inputPath)) + ".html",
-// );
-
-// Deno.writeTextFileSync(outputPath, outputHTML);
-// console.log(`Exported to ${outputPath}`);
+// --out が指定された場合はファイルに書き出す（デフォルトはクリップボード）
+if (outputToFile) {
+  const finalOutputPath = outputPath ?? path.join(
+    path.dirname(inputPath),
+    path.basename(inputPath, path.extname(inputPath)) + ".html",
+  );
+  Deno.writeTextFileSync(finalOutputPath, outputHTML);
+  console.log(`Exported to ${finalOutputPath}`);
+}
 if (enableOGP) {
   console.log("OGP preview enabled for standalone links");
 }
 console.log(`Theme: ${themeName}`);
 
-// クリップボードにコピー処理 (Linux only)
-try {
-  const command = new Deno.Command("xsel", {
-    args: ["--clipboard", "--input"],
-    stdin: "piped",
-  });
-  
-  const child = command.spawn();
-  const writer = child.stdin.getWriter();
-  await writer.write(new TextEncoder().encode(outputHTML));
-  await writer.close();
-  
-  const { success } = await child.status;
-  
-  if (success) {
-    console.log("HTML content copied to clipboard!");
-  } else {
-    throw new Error("xsel command failed");
+// クリップボードにコピー処理 (Linux only)。--out 指定時はスキップ
+if (!outputToFile) {
+  try {
+    const command = new Deno.Command("xsel", {
+      args: ["--clipboard", "--input"],
+      stdin: "piped",
+    });
+    
+    const child = command.spawn();
+    const writer = child.stdin.getWriter();
+    await writer.write(new TextEncoder().encode(outputHTML));
+    await writer.close();
+    
+    const { success } = await child.status;
+    
+    if (success) {
+      console.log("HTML content copied to clipboard!");
+    } else {
+      throw new Error("xsel command failed");
+    }
+  } catch (error) {
+    console.error("Failed to copy to clipboard:", error);
+    console.log("Make sure xsel is installed: sudo apt-get install xsel");
   }
-} catch (error) {
-  console.error("Failed to copy to clipboard:", error);
-  console.log("Make sure xsel is installed: sudo apt-get install xsel");
 }
 
 // OGP機能の許可についての注意

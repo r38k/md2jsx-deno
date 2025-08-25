@@ -143,6 +143,24 @@ const themes = {
 	},
 } as const;
 
+// ヘックスカラーに透明度を適用する簡易ユーティリティ
+const withAlpha = (hex: string, alpha: number): string => {
+    const m = hex.trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (!m) return hex;
+    let r: number, g: number, b: number;
+    if (m[1].length === 3) {
+        r = parseInt(m[1][0] + m[1][0], 16);
+        g = parseInt(m[1][1] + m[1][1], 16);
+        b = parseInt(m[1][2] + m[1][2], 16);
+    } else {
+        r = parseInt(m[1].slice(0, 2), 16);
+        g = parseInt(m[1].slice(2, 4), 16);
+        b = parseInt(m[1].slice(4, 6), 16);
+    }
+    const a = Math.min(Math.max(alpha, 0), 1);
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
+};
+
 /**
  * 利用可能なテーマ名
  */
@@ -158,6 +176,21 @@ interface MarkdownToJsxProps {
     enableOGP?: boolean;
     ogpData?: Map<string, OGPInfo>;
 }
+
+// --- カスタムノード型（注釈・フッター） ---
+interface NoteNode {
+    type: 'note';
+    label?: string;
+    title?: string;
+    children: RootContent[];
+}
+
+interface FooterNode {
+    type: 'footer';
+    children: RootContent[];
+}
+
+type AstNode = RootContent | Root | NoteNode | FooterNode;
 
 /**
  * インラインコードコンポーネント
@@ -278,37 +311,37 @@ const Heading: React.FC<{
 }> = ({ level, children, theme }) => {
     const styles = {
         h1: {
-            fontSize: "2em",
+            fontSize: "1.9em",
             fontWeight: "bold",
             margin: "1.0em 0",
-            color: theme.textColor,
+            color: withAlpha(theme.textColor, 0.9),
             lineHeight: "1.2",
             letterSpacing: "-0.03em",
             paddingBottom: "0.5rem",
             borderBottom: "3px solid #3498db",
         },
         h2: {
-            fontSize: "1.5em",
+            fontSize: "1.45em",
             fontWeight: "bold",
             margin: "0.75em 0",
-            color: theme.textColor,
+            color: withAlpha(theme.textColor, 0.9),
             lineHeight: "1.3",
             paddingLeft: "1rem",
             borderLeft: "5px solid #2ecc71",
         },
         h3: {
-            fontSize: "1.17em",
+            fontSize: "1.12em",
             fontWeight: "bold",
             margin: "0.5em 0",
-            color: theme.textColor,
+            color: withAlpha(theme.textColor, 0.88),
             paddingBottom: "0.4rem",
             display: "inline-block",
         },
 		h4: {
-			fontSize: "1.1em",
+			fontSize: "1.05em",
 			fontWeight: "bold",
 			margin: "0.25em 0",
-			color: theme.textColor,
+			color: withAlpha(theme.textColor, 0.88),
 			paddingBottom: "0.4rem",
 			display: "inline-block",
 		},
@@ -584,7 +617,7 @@ const TableDataCell: React.FC<{ children: React.ReactNode; theme: Theme }> = ({
  * ASTノードを再帰的にJSXに変換する関数
  */
 const renderAstNode = (
-    node: RootContent | Root,
+    node: AstNode,
     theme: Theme,
     index?: number,
     options?: {
@@ -611,6 +644,48 @@ const renderAstNode = (
     };
 
     switch (node.type) {
+        // --- カスタムノードの描画 ---
+        case 'note': {
+            const note = node as NoteNode;
+            const containerStyle: React.CSSProperties = {
+                borderLeft: `4px solid ${theme.linkColor}`,
+                backgroundColor: theme.blockquoteBackgroundColor,
+                color: theme.textColor,
+                padding: '12px 16px',
+                margin: '1em 0',
+                borderRadius: 4,
+            };
+            const titleStyle: React.CSSProperties = {
+                fontWeight: 'bold',
+                marginBottom: 6,
+            };
+            return (
+                <div style={containerStyle} key={key}>
+                    {(note.label || note.title) && (
+                        <div style={titleStyle}>
+                            {note.label ? `${note.label.toUpperCase()}` : 'NOTE'}
+                            {note.title ? `: ${note.title}` : ''}
+                        </div>
+                    )}
+                    {note.children.map((c, i) => renderAstNode(c, theme, i, options))}
+                </div>
+            );
+        }
+        case 'footer': {
+            const footer = node as FooterNode;
+            const style: React.CSSProperties = {
+                borderTop: `1px solid ${theme.horizontalRuleColor}`,
+                marginTop: '1.5em',
+                paddingTop: '0.75em',
+                opacity: 0.85,
+                fontSize: '0.95em',
+            };
+            return (
+                <footer style={style} key={key}>
+                    {footer.children.map((c, i) => renderAstNode(c, theme, i, options))}
+                </footer>
+            );
+        }
         case "root":
             return (
                 <React.Fragment key={key}>
@@ -893,8 +968,86 @@ const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({
         if (!markdown) return null; // markdownがない場合はnullを返す
         // コンポーネント内部で AST を生成
         const ast = markdownToAst(markdown);
+
+        // --- カスタム構文のAST変換 ---
+        const transformAst = (root: Root): AstNode => {
+            const children = [...(root.children as RootContent[])];
+            const transformed: RootContent[] = [];
+
+            const paraText = (n: RootContent): string | null => {
+                if (n.type !== 'paragraph') return null;
+                const p = n as unknown as Parent;
+                if (!p.children || p.children.length === 0) return '';
+                // 子テキストを結合して評価（強調などが混じっても素のテキストに近い形で判定）
+                const text = p.children.map((c: any) => (c.value ?? '')).join('');
+                return (text ?? '').toString();
+            };
+            const isParagraphWithText = (n: RootContent, re: RegExp) => {
+                const t = paraText(n);
+                if (t == null) return false;
+                return re.test(t.trim());
+            };
+
+            const parseNoteHeader = (text: string) => {
+                // ::: NOTE xxx(Title)
+                const m = text.match(/^:::\s*NOTE(?:\s+([^()]+))?(?:\(([^)]*)\))?\s*$/i);
+                if (!m) return null;
+                const label = m[1]?.trim();
+                const title = m[2]?.trim();
+                return { label, title };
+            };
+
+            for (let i = 0; i < children.length; i++) {
+                const n = children[i];
+                // 注釈ブロック開始
+                if (
+                    isParagraphWithText(n, /^:::\s*NOTE\b/i)
+                ) {
+                    const headerText = (paraText(n) ?? '').toString();
+                    const meta = parseNoteHeader(headerText);
+                    // 終了マーカーを探す
+                    let j = i + 1;
+                    const content: RootContent[] = [];
+                    for (; j < children.length; j++) {
+                        const candidate = children[j];
+                        if (isParagraphWithText(candidate, /^:::\s*$/)) {
+                            break; // 閉じ
+                        }
+                        content.push(candidate);
+                    }
+                    const noteNode: NoteNode = {
+                        type: 'note',
+                        label: meta?.label || 'note',
+                        title: meta?.title,
+                        children: content,
+                    };
+                    transformed.push(noteNode as unknown as RootContent);
+                    i = j; // 閉じの行まで進める（forループの++で次へ）
+                    continue;
+                }
+
+                transformed.push(n);
+            }
+
+            // フッター（最後の水平線以降をフッターに）
+            let lastBreak = -1;
+            for (let idx = 0; idx < transformed.length; idx++) {
+                if (transformed[idx].type === 'thematicBreak') lastBreak = idx;
+            }
+            if (lastBreak >= 0 && lastBreak < transformed.length - 1) {
+                const head = transformed.slice(0, lastBreak);
+                const tail = transformed.slice(lastBreak + 1);
+                const footerNode: FooterNode = { type: 'footer', children: tail };
+                const out: any = { ...root, children: [...head, footerNode as any] };
+                return out as AstNode;
+            }
+
+            return { ...root, children: transformed } as AstNode;
+        };
+
+        const transformedAst = transformAst(ast as Root);
         // Rootノードからレンダリングを開始
-        return renderAstNode(ast, theme, 0, { enableOGP, ogpData });
+        return renderAstNode(transformedAst, theme, 0, { enableOGP, ogpData });
     }, [markdown, theme, enableOGP, ogpData]); // 依存配列を更新
 
     return <div style={containerStyle}>{jsxElements}</div>;
