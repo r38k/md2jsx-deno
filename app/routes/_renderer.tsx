@@ -11,6 +11,8 @@ export default reactRenderer(({ children }) => {
         {/* Tailwind */}
         <Link href="/app/style.css" rel="stylesheet" />
         <Script src="/app/client.ts" async />
+        {/* Twitter Widgets */}
+        <script async src="https://platform.twitter.com/widgets.js" charSet="utf-8"></script>
       </head>
       <body className='bg-gray-700 text-white'>{children}</body>
     </html>

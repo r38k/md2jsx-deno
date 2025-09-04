@@ -1,11 +1,13 @@
-import { createRoute } from 'honox/factory'
 import MarkdownToJsx from '../components/MarkdownToJsx.tsx'
 import Header from '../components/Header.tsx'
 import { prepareOGPData } from '../utils/prepareOgp.ts'
+import { prepareTwitterData } from '../utils/prepareTwitter.ts'
+import type { Context } from 'hono'
 
-export default createRoute(async (c) => {
+export default async function Index(c: Context) {
   const themeName = (c.req.query('theme') || 'dark') as 'light' | 'dark' | 'sepia' | 'nord' | 'github' | 'dracula';
   const enableOGP = c.req.query('ogp') === 'true';
+  const twitterMode = (c.req.query('twitter') === 'widgets') ? 'widgets' : 'inline';
   
   // 拡張されたサンプルMarkdown - 元の内容に追記
   const sampleMd = `# Markdown変換デモ
@@ -121,12 +123,17 @@ $$
 
 :::
 
+### ソーシャルメディア埋め込み
+
+https://x.com/__syumai/status/1963551381735849993
+
 ---
 
 フッター: ここに連絡先や補足情報を置けます。`
 
   // OGPデータを事前に取得
   const ogpData = enableOGP ? await prepareOGPData(sampleMd) : undefined;
+  const twitterData = enableOGP ? await prepareTwitterData(sampleMd) : undefined;
 
   const themeBackgrounds = {
     light: 'bg-gray-50',
@@ -139,19 +146,15 @@ $$
 
   const bgClass = themeBackgrounds[themeName as keyof typeof themeBackgrounds] || 'bg-gray-50';
 
-  return c.render(
+  return (
     <div className={`min-h-screen ${bgClass}`}>
       <div className="max-w-6xl mx-auto p-6">
-        <Header currentTheme={themeName} enableOGP={enableOGP} />
+        <Header currentTheme={themeName} enableOGP={enableOGP} twitterMode={twitterMode} />
         
         <div className="rounded-lg shadow-sm overflow-hidden">
-          <MarkdownToJsx markdown={sampleMd} themeName={themeName} enableOGP={enableOGP} ogpData={ogpData} />
+          <MarkdownToJsx markdown={sampleMd} themeName={themeName} enableOGP={enableOGP} ogpData={ogpData} twitterData={twitterData} twitterMode={twitterMode} />
         </div>
-        
-        <footer className="mt-8 text-center text-gray-500 text-sm">
-          <p>Markdown to JSX コンバーター - 2025</p>
-        </footer>
       </div>
     </div>
   )
-})
+}

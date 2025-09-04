@@ -15,6 +15,9 @@ import type { Root, Link as MdastLink, RootContent } from "mdast";
 import { markdownToAst } from "../utils/parser/markdownParser.ts";
 import { type OGPInfo } from '../utils/ogp.ts';
 import OGPCard from './OGPCard.tsx';
+import TwitterCard from './TwitterCard.tsx';
+import TwitterWidgetsCard from './TwitterWidgetsCard.tsx';
+import { isTwitterUrl, type TwitterEmbedData } from '../utils/twitter.ts';
 
 /**
  * テーマの型定義
@@ -175,6 +178,8 @@ interface MarkdownToJsxProps {
     customTheme?: Theme;
     enableOGP?: boolean;
     ogpData?: Map<string, OGPInfo>;
+    twitterData?: Map<string, TwitterEmbedData>;
+    twitterMode?: 'widgets' | 'inline'; // Twitter表示モード
 }
 
 // --- カスタムノード型（注釈・フッター） ---
@@ -623,6 +628,8 @@ const renderAstNode = (
     options?: {
         enableOGP?: boolean;
         ogpData?: Map<string, OGPInfo>;
+        twitterData?: Map<string, TwitterEmbedData>;
+        twitterMode?: 'widgets' | 'inline';
         parentNode?: RootContent | Root;
     }
 ): React.ReactNode => {
@@ -698,22 +705,40 @@ const renderAstNode = (
             // スタンドアロンリンクかチェック（段落内に単一のリンクのみ存在）
             if (
                 options?.enableOGP &&
-                options?.ogpData &&
                 paragraphNode.children.length === 1 &&
                 paragraphNode.children[0].type === "link"
             ) {
                 const linkNode = paragraphNode.children[0] as MdastLink;
-                const ogpInfo = options.ogpData.get(linkNode.url);
                 
-                if (ogpInfo) {
-                    return (
-                        <OGPCard
-                            url={linkNode.url}
-                            ogpInfo={ogpInfo}
-                            theme={theme}
-                            key={key}
-                        />
-                    );
+                // Twitter/X URLの場合
+                if (isTwitterUrl(linkNode.url) && options?.twitterData) {
+                    const twitterEmbed = options.twitterData.get(linkNode.url);
+                    if (twitterEmbed) {
+                        const TwitterComponent = options?.twitterMode === 'widgets' ? TwitterWidgetsCard : TwitterCard;
+                        return (
+                            <TwitterComponent
+                                url={linkNode.url}
+                                embedData={twitterEmbed}
+                                theme={theme}
+                                key={key}
+                            />
+                        );
+                    }
+                }
+                
+                // 通常のOGPカード
+                if (options?.ogpData) {
+                    const ogpInfo = options.ogpData.get(linkNode.url);
+                    if (ogpInfo) {
+                        return (
+                            <OGPCard
+                                url={linkNode.url}
+                                ogpInfo={ogpInfo}
+                                theme={theme}
+                                key={key}
+                            />
+                        );
+                    }
                 }
             }
             
@@ -948,6 +973,8 @@ const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({
     customTheme,
     enableOGP = false,
     ogpData,
+    twitterData,
+    twitterMode = 'inline',
 }) => {
     // テーマの選択
     const theme = customTheme || themes[themeName] || themes.dark;
@@ -1047,8 +1074,8 @@ const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({
 
         const transformedAst = transformAst(ast as Root);
         // Rootノードからレンダリングを開始
-        return renderAstNode(transformedAst, theme, 0, { enableOGP, ogpData });
-    }, [markdown, theme, enableOGP, ogpData]); // 依存配列を更新
+        return renderAstNode(transformedAst, theme, 0, { enableOGP, ogpData, twitterData, twitterMode });
+    }, [markdown, theme, enableOGP, ogpData, twitterData, twitterMode]); // 依存配列を更新
 
     return <div style={containerStyle}>{jsxElements}</div>;
 };

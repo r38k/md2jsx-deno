@@ -7,6 +7,7 @@ import React from 'react';
 interface HeaderProps {
   currentTheme: string;
   enableOGP: boolean;
+  twitterMode: 'widgets' | 'inline';
 }
 
 // テーマに基づいたスタイル定義
@@ -65,7 +66,7 @@ const getThemeStyles = (themeName: string) => {
   return themes[themeName as keyof typeof themes] || themes.dark;
 };
 
-const Header: React.FC<HeaderProps> = ({ currentTheme, enableOGP }) => {
+const Header: React.FC<HeaderProps> = ({ currentTheme, enableOGP, twitterMode }) => {
   const themes = [
     { key: 'light', label: 'Light' },
     { key: 'dark', label: 'Dark' },
@@ -94,7 +95,7 @@ const Header: React.FC<HeaderProps> = ({ currentTheme, enableOGP }) => {
             {themes.map((theme) => (
               <a
                 key={theme.key}
-                href={`?theme=${theme.key}${enableOGP ? '&ogp=true' : ''}`}
+                href={`?theme=${theme.key}${enableOGP ? '&ogp=true' : ''}${twitterMode === 'widgets' ? '&twitter=widgets' : ''}`}
                 className={`
                   px-3 py-2 rounded-md text-sm text-center font-medium transition-all duration-200
                   border hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
@@ -115,7 +116,7 @@ const Header: React.FC<HeaderProps> = ({ currentTheme, enableOGP }) => {
           <h3 className={`text-base font-semibold mb-2 ${themeStyles.textPrimary}`}>OGP プレビュー</h3>
           <div className="flex items-center gap-3">
             <a
-              href={`?theme=${currentTheme}&ogp=${!enableOGP}`}
+              href={`?theme=${currentTheme}&ogp=${!enableOGP}${twitterMode === 'widgets' ? '&twitter=widgets' : ''}`}
               className={`
                 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200
                 border hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-1
@@ -137,6 +138,54 @@ const Header: React.FC<HeaderProps> = ({ currentTheme, enableOGP }) => {
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
                   通常のリンク表示
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Twitter モード設定 */}
+        <div className="mt-4">
+          <h3 className={`text-base font-semibold mb-2 ${themeStyles.textPrimary}`}>Twitter 表示モード</h3>
+          <div className="flex items-center gap-3">
+            <div className="flex gap-2">
+              <a
+                href={`?theme=${currentTheme}${enableOGP ? '&ogp=true' : ''}&twitter=inline`}
+                className={`
+                  px-4 py-2 rounded-md text-sm font-medium transition-all duration-200
+                  border hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-1
+                  ${twitterMode === 'inline'
+                    ? 'bg-blue-500 text-white border-blue-500 shadow-md hover:bg-blue-600 focus:ring-blue-500'
+                    : themeStyles.buttonInactive
+                  }
+                `}
+              >
+                インライン
+              </a>
+              <a
+                href={`?theme=${currentTheme}${enableOGP ? '&ogp=true' : ''}&twitter=widgets`}
+                className={`
+                  px-4 py-2 rounded-md text-sm font-medium transition-all duration-200
+                  border hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-1
+                  ${twitterMode === 'widgets'
+                    ? 'bg-blue-500 text-white border-blue-500 shadow-md hover:bg-blue-600 focus:ring-blue-500'
+                    : themeStyles.buttonInactive
+                  }
+                `}
+              >
+                Widgets.js
+              </a>
+            </div>
+            <div className={`text-sm ${themeStyles.textSecondary}`}>
+              {twitterMode === 'inline' ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  インラインスタイル版（LINE WORKS対応）
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Twitter公式widgets.js版
                 </div>
               )}
             </div>

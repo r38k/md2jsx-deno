@@ -3,6 +3,7 @@ import * as path from "https://deno.land/std/path/mod.ts";
 import { renderToStaticMarkup } from "react-dom/server";
 import MarkdownToJsx from "../app/components/MarkdownToJsx.tsx";
 import { prepareOGPData } from "../app/utils/prepareOgp.ts";
+import { prepareTwitterData } from "../app/utils/prepareTwitter.ts";
 
 // コマンドライン引数の解析
 let inputPath: string | undefined;
@@ -63,10 +64,17 @@ const markdownText = Deno.readTextFileSync(inputPath);
 
 // OGPデータを事前に取得
 const ogpData = enableOGP ? await prepareOGPData(markdownText) : undefined;
+const twitterData = enableOGP ? await prepareTwitterData(markdownText) : undefined;
 
 // ReactコンポーネントをHTMLに変換（bodyの中身のみ）
 const bodyContent = renderToStaticMarkup(
-  <MarkdownToJsx markdown={markdownText} themeName={themeName} enableOGP={enableOGP} ogpData={ogpData} />
+  <MarkdownToJsx 
+    markdown={markdownText} 
+    themeName={themeName} 
+    enableOGP={enableOGP} 
+    ogpData={ogpData}
+    twitterData={twitterData}
+  />
 );
 
 // 出力するHTML（bodyの中身のみ）
@@ -110,11 +118,6 @@ if (!outputToFile) {
     console.error("Failed to copy to clipboard:", error);
     console.log("Make sure xsel is installed: sudo apt-get install xsel");
   }
-}
-
-// OGP機能の許可についての注意
- if (enableOGP) {
-  console.log("\nNote: OGP fetching requires --allow-net permission");
 }
 
 // プロセスを終了
