@@ -312,8 +312,9 @@ const Image: React.FC<{
 const Heading: React.FC<{
     level: 1 | 2 | 3 | 4;
     children: React.ReactNode;
+    anchorId?: string;
     theme: Theme;
-}> = ({ level, children, theme }) => {
+}> = ({ level, children, anchorId, theme }) => {
     const styles = {
         h1: {
             fontSize: "1.9em",
@@ -354,15 +355,35 @@ const Heading: React.FC<{
 
     switch (level) {
         case 1:
-            return <h1 style={styles.h1}>{children}</h1>;
+            return (
+                <h1 id={anchorId} style={styles.h1}>
+                    {children}
+                </h1>
+            );
         case 2:
-            return <h2 style={styles.h2}>{children}</h2>;
+            return (
+                <h2 id={anchorId} style={styles.h2}>
+                    {children}
+                </h2>
+            );
         case 3:
-            return <h3 style={styles.h3}>{children}</h3>;
+            return (
+                <h3 id={anchorId} style={styles.h3}>
+                    {children}
+                </h3>
+            );
         case 4:
-            return <h4 style={styles.h4}>{children}</h4>;
+            return (
+                <h4 id={anchorId} style={styles.h4}>
+                    {children}
+                </h4>
+            );
         default:
-            return <h4 style={styles.h4}>{children}</h4>;
+            return (
+                <h4 id={anchorId} style={styles.h4}>
+                    {children}
+                </h4>
+            );
     }
 };
 
@@ -618,6 +639,62 @@ const TableDataCell: React.FC<{ children: React.ReactNode; theme: Theme }> = ({
     return <td style={style}>{children}</td>;
 };
 
+const isParentNode = (node: unknown): node is Parent => {
+    return Boolean(node && Array.isArray((node as Parent).children));
+};
+
+const getNodeText = (node: RootContent): string => {
+    if (node.type === "text" || node.type === "inlineCode") {
+        return node.value ?? "";
+    }
+    if (isParentNode(node)) {
+        return node.children.map((child) => getNodeText(child as RootContent)).join(
+            ""
+        );
+    }
+    return "";
+};
+
+const getNodesText = (nodes: RootContent[]): string => {
+    return nodes.map((node) => getNodeText(node)).join("");
+};
+
+const extractHeadingAnchor = (headingNode: Parent): {
+    anchorId?: string;
+    children: RootContent[];
+} => {
+    const originalChildren = headingNode.children as RootContent[];
+    if (originalChildren.length === 0) {
+        return { children: originalChildren };
+    }
+
+    let anchorId: string | undefined;
+    let cleanedChildren = originalChildren;
+    const lastChild = originalChildren[originalChildren.length - 1];
+    if (lastChild.type === "text") {
+        const match = lastChild.value.match(/^(.*?)(?:\s*\{#([A-Za-z0-9_-]+)\})\s*$/);
+        if (match) {
+            anchorId = match[2];
+            const cleanedText = match[1].trimEnd();
+            if (cleanedText.length === 0) {
+                cleanedChildren = originalChildren.slice(0, -1);
+            } else {
+                cleanedChildren = originalChildren.slice(0, -1).concat({
+                    ...lastChild,
+                    value: cleanedText,
+                });
+            }
+        }
+    }
+
+    const fallbackText = getNodesText(cleanedChildren).trim();
+    if (!anchorId && fallbackText.length > 0) {
+        anchorId = fallbackText;
+    }
+
+    return { anchorId, children: cleanedChildren };
+};
+
 /**
  * ASTノードを再帰的にJSXに変換する関数
  */
@@ -640,14 +717,21 @@ const renderAstNode = (
         return n && Array.isArray(n.children);
     };
 
+    const renderChildNodes = (
+        children: RootContent[],
+        currentTheme: Theme
+    ): React.ReactNode[] => {
+        return children.map((child, i) =>
+            renderAstNode(child as RootContent, currentTheme, i, options)
+        );
+    };
+
     // 子ノードをレンダリングするヘルパー関数
     const renderChildren = (
         parent: Parent,
         currentTheme: Theme
     ): React.ReactNode[] => {
-        return parent.children.map((child, i) =>
-            renderAstNode(child as RootContent, currentTheme, i, options)
-        );
+        return renderChildNodes(parent.children as RootContent[], currentTheme);
     };
 
     switch (node.type) {
@@ -751,9 +835,10 @@ const renderAstNode = (
         case "heading": {
             // Headingコンポーネントが受け付けるlevelは1-4のため調整
             const level = Math.min(Math.max(node.depth, 1), 4) as 1 | 2 | 3 | 4;
+            const { anchorId, children } = extractHeadingAnchor(node as Parent);
             return (
-                <Heading level={level} theme={theme} key={key}>
-                    {renderChildren(node as Parent, theme)}
+                <Heading level={level} theme={theme} anchorId={anchorId} key={key}>
+                    {renderChildNodes(children, theme)}
                 </Heading>
             );
         }
