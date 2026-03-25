@@ -182,10 +182,12 @@ interface MarkdownToJsxProps {
     twitterMode?: 'widgets' | 'inline'; // Twitter表示モード
 }
 
-// --- カスタムノード型（注釈・フッター） ---
-interface NoteNode {
-    type: 'note';
-    label?: string;
+// --- カスタムノード型（カード・フッター） ---
+type CardType = 'info' | 'warning' | 'tip' | 'danger' | 'note';
+
+interface CardNode {
+    type: 'card';
+    cardType: CardType;
     title?: string;
     children: RootContent[];
 }
@@ -195,7 +197,15 @@ interface FooterNode {
     children: RootContent[];
 }
 
-type AstNode = RootContent | Root | NoteNode | FooterNode;
+type AstNode = RootContent | Root | CardNode | FooterNode;
+
+const cardTypeConfig: Record<CardType, { color: string; defaultTitle: string }> = {
+    info:    { color: '#3498db', defaultTitle: 'INFO' },
+    tip:     { color: '#2ecc71', defaultTitle: 'TIP' },
+    warning: { color: '#f39c12', defaultTitle: 'WARNING' },
+    danger:  { color: '#e74c3c', defaultTitle: 'DANGER' },
+    note:    { color: '#9b59b6', defaultTitle: 'NOTE' },
+};
 
 /**
  * インラインコードコンポーネント
@@ -736,11 +746,12 @@ const renderAstNode = (
 
     switch (node.type) {
         // --- カスタムノードの描画 ---
-        case 'note': {
-            const note = node as NoteNode;
+        case 'card': {
+            const card = node as CardNode;
+            const config = cardTypeConfig[card.cardType];
             const containerStyle: React.CSSProperties = {
-                borderLeft: `4px solid ${theme.linkColor}`,
-                backgroundColor: theme.blockquoteBackgroundColor,
+                borderLeft: `4px solid ${config.color}`,
+                backgroundColor: withAlpha(config.color, 0.08),
                 color: theme.textColor,
                 padding: '12px 16px',
                 margin: '1em 0',
@@ -749,16 +760,13 @@ const renderAstNode = (
             const titleStyle: React.CSSProperties = {
                 fontWeight: 'bold',
                 marginBottom: 6,
+                color: config.color,
             };
+            const displayTitle = card.title || config.defaultTitle;
             return (
                 <div style={containerStyle} key={key}>
-                    {(note.label || note.title) && (
-                        <div style={titleStyle}>
-                            {note.label ? `${note.label.toUpperCase()}` : 'NOTE'}
-                            {note.title ? `: ${note.title}` : ''}
-                        </div>
-                    )}
-                    {note.children.map((c, i) => renderAstNode(c, theme, i, options))}
+                    <div style={titleStyle}>{displayTitle}</div>
+                    {card.children.map((c, i) => renderAstNode(c, theme, i, options))}
                 </div>
             );
         }
@@ -1071,15 +1079,19 @@ const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({
         padding: "30px",
         borderRadius: "5px",
         transition: "all 0.3s ease",
-        maxWidth: "800px",
         margin: "0 auto",
     };
 
     // メモ化によりパフォーマンスを向上 (Markdown文字列とテーマが変更された場合のみ再計算)
     const jsxElements = useMemo(() => {
         if (!markdown) return null; // markdownがない場合はnullを返す
+        // ::: 行の前後に空行を挿入してremarkが個別のparagraphとしてパースできるようにする
+        const preprocessed = markdown.replace(
+            /^(:::.*?)$/gm,
+            (_match, line) => `\n${line}\n`
+        );
         // コンポーネント内部で AST を生成
-        const ast = markdownToAst(markdown);
+        const ast = markdownToAst(preprocessed);
 
         // --- カスタム構文のAST変換 ---
         const transformAst = (root: Root): AstNode => {
@@ -1100,23 +1112,24 @@ const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({
                 return re.test(t.trim());
             };
 
-            const parseNoteHeader = (text: string) => {
-                // ::: NOTE xxx(Title)
-                const m = text.match(/^:::\s*NOTE(?:\s+([^()]+))?(?:\(([^)]*)\))?\s*$/i);
+            const validCardTypes = new Set<string>(Object.keys(cardTypeConfig));
+
+            const parseCardHeader = (text: string): { cardType: CardType; title?: string } | null => {
+                // :::type タイトル or :::type(タイトル) or :::type
+                const m = text.match(/^:::\s*(\w+)(?:\s+(.+?))?(?:\(([^)]*)\))?\s*$/i);
                 if (!m) return null;
-                const label = m[1]?.trim();
-                const title = m[2]?.trim();
-                return { label, title };
+                const rawType = m[1].toLowerCase();
+                if (!validCardTypes.has(rawType)) return null;
+                const title = m[3]?.trim() || m[2]?.trim();
+                return { cardType: rawType as CardType, title: title || undefined };
             };
 
             for (let i = 0; i < children.length; i++) {
                 const n = children[i];
-                // 注釈ブロック開始
-                if (
-                    isParagraphWithText(n, /^:::\s*NOTE\b/i)
-                ) {
-                    const headerText = (paraText(n) ?? '').toString();
-                    const meta = parseNoteHeader(headerText);
+                // カードブロック開始
+                const headerText = paraText(n);
+                const cardMeta = headerText != null ? parseCardHeader(headerText.trim()) : null;
+                if (cardMeta) {
                     // 終了マーカーを探す
                     let j = i + 1;
                     const content: RootContent[] = [];
@@ -1127,13 +1140,13 @@ const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({
                         }
                         content.push(candidate);
                     }
-                    const noteNode: NoteNode = {
-                        type: 'note',
-                        label: meta?.label || 'note',
-                        title: meta?.title,
+                    const cardNode: CardNode = {
+                        type: 'card',
+                        cardType: cardMeta.cardType,
+                        title: cardMeta.title,
                         children: content,
                     };
-                    transformed.push(noteNode as unknown as RootContent);
+                    transformed.push(cardNode as unknown as RootContent);
                     i = j; // 閉じの行まで進める（forループの++で次へ）
                     continue;
                 }
