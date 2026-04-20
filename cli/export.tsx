@@ -8,7 +8,7 @@ import { prepareTwitterData } from "../app/utils/prepareTwitter.ts";
 // コマンドライン引数の解析
 let inputPath: string | undefined;
 let enableOGP = false;
-let themeName: 'light' | 'dark' | 'sepia' | 'nord' | 'github' | 'dracula' = 'dark';
+let themeName: 'humble' | 'light' | 'dark' | 'sepia' | 'nord' | 'github' | 'dracula' = 'humble';
 let outputToFile = false;
 let outputPath: string | undefined;
 
@@ -18,7 +18,7 @@ for (let i = 0; i < Deno.args.length; i++) {
     enableOGP = true;
   } else if (arg === '--theme' && i + 1 < Deno.args.length) {
     const theme = Deno.args[++i];
-    if (['light', 'dark', 'sepia', 'nord', 'github', 'dracula'].includes(theme)) {
+    if (['humble', 'light', 'dark', 'sepia', 'nord', 'github', 'dracula'].includes(theme)) {
       themeName = theme as typeof themeName;
     } else {
       console.error(`Invalid theme: ${theme}`);
@@ -42,7 +42,7 @@ if (!inputPath) {
   console.error("Usage: deno run --allow-read --allow-write --allow-net --allow-run cli/export.tsx [--ogp] [--theme <theme-name>] [--out[=<file.html>]] <markdown-file>");
   console.error("Options:");
   console.error("  --ogp    Enable OGP preview for standalone links");
-  console.error("  --theme  Theme name (light, dark, sepia, nord, github, dracula)");
+  console.error("  --theme  Theme name (humble, light, dark, sepia, nord, github, dracula)");
   console.error("  --out    Write HTML file instead of copying to clipboard");
   console.error("           With =<file>, writes to the specified path");
   Deno.exit(1);

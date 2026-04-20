@@ -25,6 +25,11 @@ import { isTwitterUrl, type TwitterEmbedData } from '../utils/twitter.ts';
 interface Theme {
     backgroundColor: string;
     textColor: string;
+    mutedColor: string;
+    accentColor: string;
+    borderColor: string;
+    hashColor: string;
+    rowAltColor: string;
     linkColor: string;
     codeBackgroundColor: string;
     codeTextColor: string;
@@ -40,47 +45,82 @@ interface Theme {
  * テーマコレクション
  */
 const themes = {
+    // humble（デフォルト）
+    humble: {
+        backgroundColor: "#121216",
+        textColor: "#ececf0",
+        mutedColor: "#a3a3ac",
+        accentColor: "#7dd3fc",
+        borderColor: "#2e2e36",
+        hashColor: "#60606b",
+        rowAltColor: "rgba(255, 255, 255, 0.028)",
+        linkColor: "#7dd3fc",
+        codeBackgroundColor: "#0b0b10",
+        codeTextColor: "#ececf0",
+        blockquoteBackgroundColor: "rgba(125, 211, 252, 0.14)",
+        blockquoteBorderColor: "#7dd3fc",
+        blockquoteTextColor: "#ececf0",
+        tableHeaderBackgroundColor: "rgba(255, 255, 255, 0.028)",
+        tableBorderColor: "#2e2e36",
+        horizontalRuleColor: "#2e2e36",
+    },
+
     // ライトテーマ
     light: {
         backgroundColor: "#ffffff",
         textColor: "#333333",
+        mutedColor: "#6a737d",
+        accentColor: "#007bff",
+        borderColor: "#dfe2e5",
+        hashColor: "#c6cbd1",
+        rowAltColor: "rgba(0, 0, 0, 0.025)",
         linkColor: "#007bff",
         codeBackgroundColor: "#f0f0f0",
         codeTextColor: "#333333",
-        blockquoteBackgroundColor: "#f9f9f9",
-        blockquoteBorderColor: "#ccc",
-        blockquoteTextColor: "#666",
-        tableHeaderBackgroundColor: "#f2f2f2",
-        tableBorderColor: "#ddd",
-        horizontalRuleColor: "#ccc",
+        blockquoteBackgroundColor: "rgba(0, 123, 255, 0.06)",
+        blockquoteBorderColor: "#007bff",
+        blockquoteTextColor: "#555",
+        tableHeaderBackgroundColor: "rgba(0, 0, 0, 0.025)",
+        tableBorderColor: "#dfe2e5",
+        horizontalRuleColor: "#dfe2e5",
     },
 
     // ダークテーマ
     dark: {
         backgroundColor: "#1e1e1e",
         textColor: "#e0e0e0",
+        mutedColor: "#9a9a9a",
+        accentColor: "#4da3ff",
+        borderColor: "#3a3a3a",
+        hashColor: "#666666",
+        rowAltColor: "rgba(255, 255, 255, 0.03)",
         linkColor: "#4da3ff",
         codeBackgroundColor: "#2d2d2d",
         codeTextColor: "#e0e0e0",
-        blockquoteBackgroundColor: "#2a2a2a",
-        blockquoteBorderColor: "#555",
-        blockquoteTextColor: "#aaa",
-        tableHeaderBackgroundColor: "#2a2a2a",
-        tableBorderColor: "#555",
-        horizontalRuleColor: "#555",
+        blockquoteBackgroundColor: "rgba(77, 163, 255, 0.1)",
+        blockquoteBorderColor: "#4da3ff",
+        blockquoteTextColor: "#bbb",
+        tableHeaderBackgroundColor: "rgba(255, 255, 255, 0.03)",
+        tableBorderColor: "#3a3a3a",
+        horizontalRuleColor: "#3a3a3a",
     },
 
     // セピアテーマ
     sepia: {
         backgroundColor: "#f4ecd8",
         textColor: "#5b4636",
+        mutedColor: "#8a7858",
+        accentColor: "#1e7b75",
+        borderColor: "#c3b393",
+        hashColor: "#b0a07d",
+        rowAltColor: "rgba(91, 70, 54, 0.04)",
         linkColor: "#1e7b75",
         codeBackgroundColor: "#e8e0cc",
         codeTextColor: "#5b4636",
-        blockquoteBackgroundColor: "#eae0c9",
-        blockquoteBorderColor: "#c3b393",
+        blockquoteBackgroundColor: "rgba(30, 123, 117, 0.1)",
+        blockquoteBorderColor: "#1e7b75",
         blockquoteTextColor: "#7d6b56",
-        tableHeaderBackgroundColor: "#e8e0cc",
+        tableHeaderBackgroundColor: "rgba(91, 70, 54, 0.04)",
         tableBorderColor: "#c3b393",
         horizontalRuleColor: "#c3b393",
     },
@@ -89,13 +129,18 @@ const themes = {
     nord: {
         backgroundColor: "#2e3440",
         textColor: "#d8dee9",
+        mutedColor: "#81a1c1",
+        accentColor: "#88c0d0",
+        borderColor: "#4c566a",
+        hashColor: "#4c566a",
+        rowAltColor: "rgba(255, 255, 255, 0.03)",
         linkColor: "#88c0d0",
         codeBackgroundColor: "#3b4252",
         codeTextColor: "#d8dee9",
-        blockquoteBackgroundColor: "#3b4252",
-        blockquoteBorderColor: "#81a1c1",
+        blockquoteBackgroundColor: "rgba(136, 192, 208, 0.12)",
+        blockquoteBorderColor: "#88c0d0",
         blockquoteTextColor: "#e5e9f0",
-        tableHeaderBackgroundColor: "#3b4252",
+        tableHeaderBackgroundColor: "rgba(255, 255, 255, 0.03)",
         tableBorderColor: "#4c566a",
         horizontalRuleColor: "#4c566a",
     },
@@ -104,14 +149,19 @@ const themes = {
     github: {
         backgroundColor: "#ffffff",
         textColor: "#24292e",
+        mutedColor: "#6a737d",
+        accentColor: "#0366d6",
+        borderColor: "#e1e4e8",
+        hashColor: "#c6cbd1",
+        rowAltColor: "rgba(27, 31, 35, 0.04)",
         linkColor: "#0366d6",
         codeBackgroundColor: "#f6f8fa",
         codeTextColor: "#24292e",
-        blockquoteBackgroundColor: "#f6f8fa",
-        blockquoteBorderColor: "#dfe2e5",
+        blockquoteBackgroundColor: "rgba(3, 102, 214, 0.06)",
+        blockquoteBorderColor: "#0366d6",
         blockquoteTextColor: "#6a737d",
-        tableHeaderBackgroundColor: "#f6f8fa",
-        tableBorderColor: "#dfe2e5",
+        tableHeaderBackgroundColor: "rgba(27, 31, 35, 0.04)",
+        tableBorderColor: "#e1e4e8",
         horizontalRuleColor: "#e1e4e8",
     },
 
@@ -119,32 +169,30 @@ const themes = {
     dracula: {
         backgroundColor: "#282a36",
         textColor: "#f8f8f2",
+        mutedColor: "#6272a4",
+        accentColor: "#8be9fd",
+        borderColor: "#44475a",
+        hashColor: "#6272a4",
+        rowAltColor: "rgba(98, 114, 164, 0.08)",
         linkColor: "#8be9fd",
         codeBackgroundColor: "#44475a",
         codeTextColor: "#f8f8f2",
-        blockquoteBackgroundColor: "#44475a",
-        blockquoteBorderColor: "#6272a4",
+        blockquoteBackgroundColor: "rgba(139, 233, 253, 0.1)",
+        blockquoteBorderColor: "#8be9fd",
         blockquoteTextColor: "#f8f8f2",
-        tableHeaderBackgroundColor: "#44475a",
-        tableBorderColor: "#6272a4",
-        horizontalRuleColor: "#6272a4",
+        tableHeaderBackgroundColor: "rgba(98, 114, 164, 0.08)",
+        tableBorderColor: "#44475a",
+        horizontalRuleColor: "#44475a",
     },
-
-	// my theme
-	myTheme: {
-		backgroundColor: "#0F0F0F",
-		textColor: "#f8f8f2",
-		linkColor: "#8be9fd",
-		codeBackgroundColor: "#16191d",
-		codeTextColor: "#f8f8f2",
-		blockquoteBackgroundColor: "#3C3D37",
-		blockquoteBorderColor: "#6272a4",
-		blockquoteTextColor: "#9e978c",
-		tableHeaderBackgroundColor: "#232D3F",
-		tableBorderColor: "#6272a4",
-		horizontalRuleColor: "#6272a4",
-	},
 } as const;
+
+/**
+ * フォントスタック
+ */
+const FONT_SANS =
+    '"Inter", "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+const FONT_MONO =
+    '"JetBrains Mono", "Fira Code", "SFMono-Regular", ui-monospace, Menlo, monospace';
 
 // ヘックスカラーに透明度を適用する簡易ユーティリティ
 const withAlpha = (hex: string, alpha: number): string => {
@@ -174,7 +222,7 @@ export type ThemeName = keyof typeof themes;
  */
 interface MarkdownToJsxProps {
     markdown: string; // AST の代わりに Markdown 文字列を受け取る
-    themeName?: keyof typeof themes | "light" | "dark";
+    themeName?: keyof typeof themes;
     customTheme?: Theme;
     enableOGP?: boolean;
     ogpData?: Map<string, OGPInfo>;
@@ -214,12 +262,14 @@ const InlineCode: React.FC<{ code: string; theme: Theme }> = ({
     code,
     theme,
 }) => {
-    const style = {
+    const style: React.CSSProperties = {
+        fontFamily: FONT_MONO,
+        fontSize: "13px",
         backgroundColor: theme.codeBackgroundColor,
-        color: theme.codeTextColor,
-        padding: "2px 4px",
+        color: theme.accentColor,
+        padding: "2px 6px",
+        border: `1px solid ${theme.borderColor}`,
         borderRadius: "3px",
-        fontFamily: "monospace",
     };
 
     return <code style={style}>{code}</code>;
@@ -276,9 +326,11 @@ const Link: React.FC<{
     title?: string;
     theme: Theme;
 }> = ({ children, url, title, theme }) => {
-    const style = {
-        color: theme.linkColor,
+    const style: React.CSSProperties = {
+        color: theme.accentColor,
         textDecoration: "underline",
+        textDecorationColor: withAlpha(theme.accentColor, 0.45),
+        textUnderlineOffset: "2px",
     };
 
     // 外部リンクの場合は新しいタブで開く
@@ -318,6 +370,12 @@ const Image: React.FC<{
 
 /**
  * 見出しコンポーネント
+ *
+ * humble 仕様:
+ *   - h1/h2 は全幅アンダーライン（見出し自体に border-bottom）
+ *   - h3/h4 は文字幅アンダーライン（内側 span に border-bottom を付けることで、
+ *     見出し同士が連続しても横並びにならないようにする）
+ *   - すべての見出し先頭に # プレフィクス（hashColor・mono font）
  */
 const Heading: React.FC<{
     level: 1 | 2 | 3 | 4;
@@ -325,73 +383,117 @@ const Heading: React.FC<{
     anchorId?: string;
     theme: Theme;
 }> = ({ level, children, anchorId, theme }) => {
-    const styles = {
-        h1: {
-            fontSize: "1.9em",
-            fontWeight: "bold",
-            margin: "1.0em 0",
-            color: withAlpha(theme.textColor, 0.9),
-            lineHeight: "1.2",
-            letterSpacing: "-0.03em",
-            paddingBottom: "0.5rem",
-            borderBottom: "3px solid #3498db",
+    const specs: Record<1 | 2 | 3 | 4, {
+        outer: React.CSSProperties;
+        inner?: React.CSSProperties;
+        hashSize: string;
+    }> = {
+        1: {
+            outer: {
+                fontFamily: FONT_SANS,
+                fontSize: "30px",
+                fontWeight: 650,
+                letterSpacing: "-0.5px",
+                margin: "0 0 10px",
+                color: theme.textColor,
+                lineHeight: 1.25,
+                paddingBottom: "10px",
+                borderBottom: `2px solid ${withAlpha(theme.accentColor, 0.75)}`,
+            },
+            hashSize: "26px",
         },
-        h2: {
-            fontSize: "1.45em",
-            fontWeight: "bold",
-            margin: "0.75em 0",
-            color: withAlpha(theme.textColor, 0.9),
-            lineHeight: "1.3",
-            paddingLeft: "1rem",
-            borderLeft: "5px solid #2ecc71",
+        2: {
+            outer: {
+                fontFamily: FONT_SANS,
+                fontSize: "21px",
+                fontWeight: 600,
+                margin: "38px 0 10px",
+                color: withAlpha(theme.textColor, 0.97),
+                lineHeight: 1.3,
+                paddingBottom: "6px",
+                borderBottom: `1.5px solid ${withAlpha(theme.accentColor, 0.75)}`,
+            },
+            hashSize: "18px",
         },
-        h3: {
-            fontSize: "1.12em",
-            fontWeight: "bold",
-            margin: "0.5em 0",
-            color: withAlpha(theme.textColor, 0.88),
-            paddingBottom: "0.4rem",
-            display: "inline-block",
+        3: {
+            outer: {
+                fontFamily: FONT_SANS,
+                fontSize: "16.5px",
+                fontWeight: 600,
+                margin: "26px 0 6px",
+                color: withAlpha(theme.textColor, 0.92),
+            },
+            inner: {
+                display: "inline-block",
+                paddingBottom: "3px",
+                borderBottom: `1px solid ${withAlpha(theme.accentColor, 0.45)}`,
+            },
+            hashSize: "14.5px",
         },
-		h4: {
-			fontSize: "1.05em",
-			fontWeight: "bold",
-			margin: "0.25em 0",
-			color: withAlpha(theme.textColor, 0.88),
-			paddingBottom: "0.4rem",
-			display: "inline-block",
-		},
+        4: {
+            outer: {
+                fontFamily: FONT_SANS,
+                fontSize: "14px",
+                fontWeight: 600,
+                margin: "20px 0 4px",
+                color: withAlpha(theme.textColor, 0.78),
+            },
+            inner: {
+                display: "inline-block",
+                paddingBottom: "2px",
+                borderBottom: `1px dashed ${theme.mutedColor}`,
+            },
+            hashSize: "12px",
+        },
     };
+
+    const spec = specs[level];
+    const hashStyle: React.CSSProperties = {
+        color: theme.hashColor,
+        fontFamily: FONT_MONO,
+        fontWeight: 400,
+        marginRight: "10px",
+        letterSpacing: "-0.5px",
+        userSelect: "none",
+        fontSize: spec.hashSize,
+    };
+    const hashEl = <span style={hashStyle}>{"#".repeat(level)}</span>;
+
+    const inner = spec.inner ? (
+        <span style={spec.inner}>
+            {hashEl}
+            {children}
+        </span>
+    ) : (
+        <>
+            {hashEl}
+            {children}
+        </>
+    );
 
     switch (level) {
         case 1:
             return (
-                <h1 id={anchorId} style={styles.h1}>
-                    {children}
+                <h1 id={anchorId} style={spec.outer}>
+                    {inner}
                 </h1>
             );
         case 2:
             return (
-                <h2 id={anchorId} style={styles.h2}>
-                    {children}
+                <h2 id={anchorId} style={spec.outer}>
+                    {inner}
                 </h2>
             );
         case 3:
             return (
-                <h3 id={anchorId} style={styles.h3}>
-                    {children}
+                <h3 id={anchorId} style={spec.outer}>
+                    {inner}
                 </h3>
             );
         case 4:
             return (
-                <h4 id={anchorId} style={styles.h4}>
-                    {children}
-                </h4>
-            );
-        default:
-            return (
-                <h4 id={anchorId} style={styles.h4}>
-                    {children}
+                <h4 id={anchorId} style={spec.outer}>
+                    {inner}
                 </h4>
             );
     }
@@ -405,28 +507,22 @@ const Blockquote: React.FC<{
     source?: string;
     theme: Theme;
 }> = ({ children, source, theme }) => {
-    const style = {
-        borderLeft: `4px solid ${theme.blockquoteBorderColor}`,
-        paddingLeft: "16px",
-        paddingTop: "8px",
-        paddingBottom: "8px",
+    const style: React.CSSProperties = {
+        margin: "24px 0",
+        padding: "16px 20px",
+        borderLeft: `3px solid ${theme.blockquoteBorderColor}`,
         backgroundColor: theme.blockquoteBackgroundColor,
         color: theme.blockquoteTextColor,
-        margin: "1.5em 0",
-        borderRadius: "0 4px 4px 0",
-        position: "relative" as const,
+        borderRadius: "0 6px 6px 0",
     };
 
-    const sourceStyle = {
+    const sourceStyle: React.CSSProperties = {
         display: "block",
-        textAlign: "right" as const,
         marginTop: "8px",
-        fontSize: "0.9em",
-        fontStyle: "italic" as const,
-        opacity: 0.8,
-        wordBreak: "break-word" as const,
-        maxWidth: "100%",
-        paddingRight: "8px",
+        color: theme.mutedColor,
+        fontSize: "12px",
+        fontStyle: "normal",
+        wordBreak: "break-word",
     };
 
     return (
@@ -445,20 +541,22 @@ const CodeBlock: React.FC<{
     language?: string;
     theme: Theme;
 }> = ({ content, language, theme }) => {
-    const style = {
+    const style: React.CSSProperties = {
+        margin: "18px 0",
+        padding: "14px 16px",
+        borderRadius: "6px",
+        border: `1px solid ${theme.borderColor}`,
         backgroundColor: theme.codeBackgroundColor,
         color: theme.codeTextColor,
-        padding: "10px",
-        borderRadius: "4px",
-        overflowX: "auto" as const,
-        fontFamily: "monospace",
+        fontFamily: FONT_MONO,
+        fontSize: "13px",
+        lineHeight: 1.7,
+        overflow: "auto",
     };
 
     // シンタックスハイライト処理（インラインスタイルで実装）
     const highlightedCode = useMemo(() => {
         if (!language) return content;
-
-        // 言語に応じたシンプルなトークン化処理
         return tokenizeCode(content, language, theme as HighlighterTheme);
     }, [content, language, theme]);
 
@@ -473,10 +571,10 @@ const CodeBlock: React.FC<{
  * 水平線コンポーネント
  */
 const HorizontalRule: React.FC<{ theme: Theme }> = ({ theme }) => {
-    const style = {
-        border: "0",
+    const style: React.CSSProperties = {
+        margin: "32px 0",
+        border: "none",
         borderTop: `1px solid ${theme.horizontalRuleColor}`,
-        margin: "1em 0",
     };
 
     return <hr style={style} />;
@@ -489,11 +587,13 @@ const Paragraph: React.FC<{ children: React.ReactNode; theme: Theme }> = ({
     children,
     theme,
 }) => {
-    const style = {
-        margin: "1em 0",
-		paddingLeft: "10px",
+    const style: React.CSSProperties = {
+        margin: "0 0 6px",
+        fontFamily: FONT_SANS,
+        fontSize: "15px",
+        lineHeight: 1.75,
         color: theme.textColor,
-        whiteSpace: "pre-wrap" as const,
+        whiteSpace: "pre-wrap",
     };
 
     return <p style={style}>{children}</p>;
@@ -522,9 +622,9 @@ const ListItem: React.FC<{
     theme: Theme;
     style?: React.CSSProperties;
 }> = ({ children, theme, style = {} }) => {
-    const baseStyle = {
-		margin: 0,
-        display: "list-item" as const,
+    const baseStyle: React.CSSProperties = {
+        marginBottom: "2px",
+        display: "list-item",
         color: theme.textColor,
     };
 
@@ -539,11 +639,13 @@ const UnorderedList: React.FC<{
     theme: Theme;
     style?: React.CSSProperties;
 }> = ({ children, theme, style = {} }) => {
-    const baseStyle = {
-		margin: 0,
-        paddingLeft: "30px",
-        listStyleType: "disc" as const,
+    const baseStyle: React.CSSProperties = {
+        margin: "4px 0 0",
+        paddingLeft: "22px",
+        listStyleType: "disc",
         color: theme.textColor,
+        fontSize: "15px",
+        lineHeight: 1.78,
     };
 
     return <ul style={{ ...baseStyle, ...style }}>{children}</ul>;
@@ -557,11 +659,13 @@ const OrderedList: React.FC<{
     theme: Theme;
     style?: React.CSSProperties;
 }> = ({ children, theme, style = {} }) => {
-    const baseStyle = {
-		margin: 0,
-        paddingLeft: "30px",
-        listStyleType: "decimal" as const,
+    const baseStyle: React.CSSProperties = {
+        margin: "4px 0 0",
+        paddingLeft: "22px",
+        listStyleType: "decimal",
         color: theme.textColor,
+        fontSize: "15px",
+        lineHeight: 1.78,
     };
 
     return <ol style={{ ...baseStyle, ...style }}>{children}</ol>;
@@ -574,10 +678,14 @@ const Table: React.FC<{ children: React.ReactNode; theme: Theme }> = ({
     children,
     theme,
 }) => {
-    const style = {
-        borderCollapse: "collapse" as const,
+    const style: React.CSSProperties = {
         width: "100%",
-        margin: "1em 0",
+        borderCollapse: "collapse",
+        fontSize: "13.5px",
+        border: `1px solid ${theme.tableBorderColor}`,
+        borderRadius: "6px",
+        overflow: "hidden",
+        margin: "10px 0 18px",
         color: theme.textColor,
     };
 
@@ -591,7 +699,11 @@ const TableHeader: React.FC<{ children: React.ReactNode; theme: Theme }> = ({
     children,
     theme,
 }) => {
-    return <thead style={{ color: theme.textColor }}>{children}</thead>;
+    return (
+        <thead style={{ backgroundColor: theme.tableHeaderBackgroundColor }}>
+            {children}
+        </thead>
+    );
 };
 
 /**
@@ -601,17 +713,26 @@ const TableBody: React.FC<{ children: React.ReactNode; theme: Theme }> = ({
     children,
     theme,
 }) => {
-    return <tbody style={{ color: theme.textColor }}>{children}</tbody>;
+    return <tbody>{children}</tbody>;
 };
 
 /**
  * テーブル行コンポーネント
+ *
+ * rowIndex が偶数（0, 2, 4...）ならデフォルト、奇数なら alt 背景（zebra stripe）。
+ * ヘッダー行は -1 を渡して alt を適用しない。
  */
-const TableRow: React.FC<{ children: React.ReactNode; theme: Theme }> = ({
-    children,
-    theme,
-}) => {
-    return <tr style={{ color: theme.textColor }}>{children}</tr>;
+const TableRow: React.FC<{
+    children: React.ReactNode;
+    theme: Theme;
+    rowIndex?: number;
+}> = ({ children, theme, rowIndex = 0 }) => {
+    const style: React.CSSProperties = {
+        backgroundColor: rowIndex >= 0 && rowIndex % 2 === 1
+            ? theme.rowAltColor
+            : undefined,
+    };
+    return <tr style={style}>{children}</tr>;
 };
 
 /**
@@ -621,29 +742,37 @@ const TableHeaderCell: React.FC<{
     children: React.ReactNode;
     theme: Theme;
 }> = ({ children, theme }) => {
-    const style = {
-        border: `1px solid ${theme.tableBorderColor}`,
-        padding: "8px",
-        backgroundColor: theme.tableHeaderBackgroundColor,
-        color: theme.textColor,
-        textAlign: "left" as const,
+    const style: React.CSSProperties = {
+        padding: "10px 14px",
+        fontSize: "12px",
+        fontWeight: 600,
+        letterSpacing: "0.4px",
+        textTransform: "uppercase",
+        color: theme.accentColor,
+        borderBottom: `1px solid ${theme.tableBorderColor}`,
+        textAlign: "left",
     };
 
     return <th style={style}>{children}</th>;
 };
 
 /**
- * テーブルデータセルコンポーネント
+ * テーブルデータセルコンポーネント（列の先頭セルかどうかで色を変える）
  */
-const TableDataCell: React.FC<{ children: React.ReactNode; theme: Theme }> = ({
-    children,
-    theme,
-}) => {
-    const style = {
-        border: `1px solid ${theme.tableBorderColor}`,
-        padding: "8px",
-        color: theme.textColor,
-        textAlign: "left" as const,
+const TableDataCell: React.FC<{
+    children: React.ReactNode;
+    theme: Theme;
+    isFirst?: boolean;
+    isLastRow?: boolean;
+}> = ({ children, theme, isFirst = false, isLastRow = false }) => {
+    const style: React.CSSProperties = {
+        padding: "9px 14px",
+        borderBottom: isLastRow
+            ? "none"
+            : `1px solid ${theme.tableBorderColor}`,
+        color: isFirst ? theme.textColor : theme.mutedColor,
+        fontWeight: isFirst ? 500 : undefined,
+        textAlign: "left",
     };
 
     return <td style={style}>{children}</td>;
@@ -924,33 +1053,64 @@ const renderAstNode = (
             }
         } // ブロックスコープ終了
         case "table": {
-            const headerRow = node.children[0];
-            const bodyRows = node.children.slice(1);
+            const headerRow = node.children[0] as Parent | undefined;
+            const bodyRows = (node.children.slice(1) as Parent[]);
+            const headerCells = (headerRow?.children ?? []) as Parent[];
             return (
                 <Table theme={theme} key={key}>
-                    <TableHeader theme={theme}>
-                        {renderAstNode(headerRow as RootContent, theme, 0)}
-                    </TableHeader>
+                    {headerRow && (
+                        <TableHeader theme={theme}>
+                            <TableRow theme={theme} rowIndex={-1}>
+                                {headerCells.map((cell, i) => (
+                                    <TableHeaderCell theme={theme} key={i}>
+                                        {renderChildNodes(
+                                            cell.children as RootContent[],
+                                            theme
+                                        )}
+                                    </TableHeaderCell>
+                                ))}
+                            </TableRow>
+                        </TableHeader>
+                    )}
                     <TableBody theme={theme}>
-                        {bodyRows.map((row, i) =>
-                            renderAstNode(row as RootContent, theme, i + 1)
-                        )}
+                        {bodyRows.map((row, ri) => {
+                            const cells = row.children as Parent[];
+                            const isLastRow = ri === bodyRows.length - 1;
+                            return (
+                                <TableRow theme={theme} key={ri} rowIndex={ri}>
+                                    {cells.map((cell, ci) => (
+                                        <TableDataCell
+                                            theme={theme}
+                                            key={ci}
+                                            isFirst={ci === 0}
+                                            isLastRow={isLastRow}
+                                        >
+                                            {renderChildNodes(
+                                                cell.children as RootContent[],
+                                                theme
+                                            )}
+                                        </TableDataCell>
+                                    ))}
+                                </TableRow>
+                            );
+                        })}
                     </TableBody>
                 </Table>
             );
         }
         case "tableRow":
+            // "table" ケース内で直接描画するため通常は到達しない
             return (
                 <TableRow theme={theme} key={key}>
                     {renderChildren(node as Parent, theme)}
                 </TableRow>
             );
         case "tableCell": {
-            const CellComponent = TableDataCell;
+            // "table" ケース内で直接描画するため通常は到達しない
             return (
-                <CellComponent theme={theme} key={key}>
+                <TableDataCell theme={theme} key={key}>
                     {renderChildren(node as Parent, theme)}
-                </CellComponent>
+                </TableDataCell>
             );
         }
         case "html":
@@ -1062,7 +1222,7 @@ const renderAstNode = (
  */
 const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({
     markdown,
-    themeName = "myTheme",
+    themeName = "humble",
     customTheme,
     enableOGP = false,
     ogpData,
@@ -1070,14 +1230,17 @@ const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({
     twitterMode = 'inline',
 }) => {
     // テーマの選択
-    const theme = customTheme || themes[themeName] || themes.dark;
+    const theme = customTheme || themes[themeName] || themes.humble;
 
     // コンテナスタイル
-    const containerStyle = {
+    const containerStyle: React.CSSProperties = {
         backgroundColor: theme.backgroundColor,
         color: theme.textColor,
+        fontFamily: FONT_SANS,
+        fontSize: "15px",
+        lineHeight: 1.75,
         padding: "30px",
-        borderRadius: "5px",
+        borderRadius: "6px",
         transition: "all 0.3s ease",
         margin: "0 auto",
     };

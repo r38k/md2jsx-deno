@@ -5,7 +5,7 @@ import { prepareTwitterData } from '../utils/prepareTwitter.ts'
 import type { Context } from 'hono'
 
 export default async function Index(c: Context) {
-  const themeName = (c.req.query('theme') || 'dark') as 'light' | 'dark' | 'sepia' | 'nord' | 'github' | 'dracula';
+  const themeName = (c.req.query('theme') || 'humble') as 'humble' | 'light' | 'dark' | 'sepia' | 'nord' | 'github' | 'dracula';
   const enableOGP = c.req.query('ogp') === 'true';
   const twitterMode = (c.req.query('twitter') === 'widgets') ? 'widgets' : 'inline';
   
@@ -136,6 +136,7 @@ https://x.com/__syumai/status/1963551381735849993
   const twitterData = enableOGP ? await prepareTwitterData(sampleMd) : undefined;
 
   const themeBackgrounds = {
+    humble: 'bg-neutral-950',
     light: 'bg-gray-50',
     dark: 'bg-gray-900',
     sepia: 'bg-amber-50',
@@ -144,7 +145,7 @@ https://x.com/__syumai/status/1963551381735849993
     dracula: 'bg-purple-900',
   };
 
-  const bgClass = themeBackgrounds[themeName as keyof typeof themeBackgrounds] || 'bg-gray-50';
+  const bgClass = themeBackgrounds[themeName as keyof typeof themeBackgrounds] || 'bg-neutral-950';
 
   return (
     <div className={`min-h-screen ${bgClass}`}>

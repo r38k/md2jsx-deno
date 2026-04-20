@@ -13,6 +13,14 @@ interface HeaderProps {
 // テーマに基づいたスタイル定義
 const getThemeStyles = (themeName: string) => {
   const themes = {
+    humble: {
+      bg: 'bg-neutral-950',
+      cardBg: 'bg-neutral-900',
+      textPrimary: 'text-neutral-100',
+      textSecondary: 'text-neutral-400',
+      border: 'border-neutral-800',
+      buttonInactive: 'bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700',
+    },
     light: {
       bg: 'bg-gray-50',
       cardBg: 'bg-white',
@@ -63,11 +71,12 @@ const getThemeStyles = (themeName: string) => {
     },
   };
   
-  return themes[themeName as keyof typeof themes] || themes.dark;
+  return themes[themeName as keyof typeof themes] || themes.humble;
 };
 
 const Header: React.FC<HeaderProps> = ({ currentTheme, enableOGP, twitterMode }) => {
   const themes = [
+    { key: 'humble', label: 'Humble' },
     { key: 'light', label: 'Light' },
     { key: 'dark', label: 'Dark' },
     { key: 'sepia', label: 'Sepia' },
@@ -91,7 +100,7 @@ const Header: React.FC<HeaderProps> = ({ currentTheme, enableOGP, twitterMode })
         {/* テーマ選択 */}
         <div className="mb-4">
           <h3 className={`text-base font-semibold mb-2 ${themeStyles.textPrimary}`}>テーマ選択</h3>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-7 gap-2">
             {themes.map((theme) => (
               <a
                 key={theme.key}
