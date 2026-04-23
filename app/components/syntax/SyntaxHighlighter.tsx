@@ -25,11 +25,25 @@ export interface Theme {
 
 /**
  * テーマがダークかどうかを判定するヘルパー関数
+ * 背景色の相対輝度 (ITU-R BT.709) で判定する。
  */
 export const isDarkTheme = (theme: Theme): boolean => {
-  return theme.backgroundColor.toLowerCase().includes('#1') || 
-         theme.backgroundColor.toLowerCase().includes('#2') || 
-         theme.backgroundColor.toLowerCase().includes('#3');
+  const raw = theme.backgroundColor.trim();
+  const hex = raw.startsWith('#') ? raw.slice(1) : raw;
+  // 3桁 or 6桁の hex 以外は従来挙動にフォールバック
+  if (hex.length !== 3 && hex.length !== 6) {
+    return raw.toLowerCase().includes('#1') ||
+           raw.toLowerCase().includes('#2') ||
+           raw.toLowerCase().includes('#3');
+  }
+  const full = hex.length === 3
+    ? hex.split('').map(c => c + c).join('')
+    : hex;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return luminance < 128;
 };
 
 /**

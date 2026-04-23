@@ -47,22 +47,22 @@ interface Theme {
 const themes = {
     // humble（デフォルト）
     humble: {
-        backgroundColor: "#121216",
-        textColor: "#ececf0",
-        mutedColor: "#a3a3ac",
-        accentColor: "#7dd3fc",
-        borderColor: "#2e2e36",
-        hashColor: "#60606b",
-        rowAltColor: "rgba(255, 255, 255, 0.028)",
-        linkColor: "#7dd3fc",
-        codeBackgroundColor: "#0b0b10",
-        codeTextColor: "#ececf0",
-        blockquoteBackgroundColor: "rgba(125, 211, 252, 0.14)",
-        blockquoteBorderColor: "#7dd3fc",
-        blockquoteTextColor: "#ececf0",
-        tableHeaderBackgroundColor: "rgba(255, 255, 255, 0.028)",
-        tableBorderColor: "#2e2e36",
-        horizontalRuleColor: "#2e2e36",
+        backgroundColor: "#0a0a0b",
+        textColor: "#e8e8f0",
+        mutedColor: "#8a8a90",
+        accentColor: "#d4a574",
+        borderColor: "#2a2a3a",
+        hashColor: "#5a5a6a",
+        rowAltColor: "rgba(255, 250, 240, 0.022)",
+        linkColor: "#d4a574",
+        codeBackgroundColor: "#050507",
+        codeTextColor: "#b8b8c0",
+        blockquoteBackgroundColor: "transparent",
+        blockquoteBorderColor: "#8b7355",
+        blockquoteTextColor: "#e8e8f0",
+        tableHeaderBackgroundColor: "rgba(255, 250, 240, 0.028)",
+        tableBorderColor: "#2a2a3a",
+        horizontalRuleColor: "#2a2a3a",
     },
 
     // ライトテーマ
@@ -508,20 +508,22 @@ const Blockquote: React.FC<{
     theme: Theme;
 }> = ({ children, source, theme }) => {
     const style: React.CSSProperties = {
-        margin: "24px 0",
-        padding: "16px 20px",
-        borderLeft: `3px solid ${theme.blockquoteBorderColor}`,
+        margin: "28px 0",
+        padding: "4px 0 4px 20px",
+        borderLeft: `1px solid ${theme.blockquoteBorderColor}`,
         backgroundColor: theme.blockquoteBackgroundColor,
         color: theme.blockquoteTextColor,
-        borderRadius: "0 6px 6px 0",
+        fontStyle: "italic",
     };
 
     const sourceStyle: React.CSSProperties = {
         display: "block",
-        marginTop: "8px",
+        marginTop: "10px",
         color: theme.mutedColor,
-        fontSize: "12px",
+        fontFamily: FONT_MONO,
+        fontSize: "11px",
         fontStyle: "normal",
+        letterSpacing: "0.15em",
         wordBreak: "break-word",
     };
 
@@ -542,15 +544,16 @@ const CodeBlock: React.FC<{
     theme: Theme;
 }> = ({ content, language, theme }) => {
     const style: React.CSSProperties = {
-        margin: "18px 0",
-        padding: "14px 16px",
-        borderRadius: "6px",
-        border: `1px solid ${theme.borderColor}`,
+        margin: "18px 0 22px",
+        padding: "18px 22px",
+        borderRadius: "2px",
+        borderLeft: `1px solid ${theme.borderColor}`,
         backgroundColor: theme.codeBackgroundColor,
         color: theme.codeTextColor,
         fontFamily: FONT_MONO,
-        fontSize: "13px",
-        lineHeight: 1.7,
+        fontSize: "12.5px",
+        lineHeight: 1.85,
+        letterSpacing: 0,
         overflow: "auto",
     };
 
@@ -572,9 +575,10 @@ const CodeBlock: React.FC<{
  */
 const HorizontalRule: React.FC<{ theme: Theme }> = ({ theme }) => {
     const style: React.CSSProperties = {
-        margin: "32px 0",
+        margin: "40px 0",
         border: "none",
-        borderTop: `1px solid ${theme.horizontalRuleColor}`,
+        height: "1px",
+        background: `linear-gradient(90deg, transparent 0%, ${theme.horizontalRuleColor} 20%, ${theme.horizontalRuleColor} 80%, transparent 100%)`,
     };
 
     return <hr style={style} />;
@@ -588,10 +592,10 @@ const Paragraph: React.FC<{ children: React.ReactNode; theme: Theme }> = ({
     theme,
 }) => {
     const style: React.CSSProperties = {
-        margin: "0 0 6px",
+        margin: "0 0 16px",
         fontFamily: FONT_SANS,
         fontSize: "15px",
-        lineHeight: 1.75,
+        lineHeight: 1.95,
         color: theme.textColor,
         whiteSpace: "pre-wrap",
     };
@@ -626,6 +630,7 @@ const ListItem: React.FC<{
         marginBottom: "2px",
         display: "list-item",
         color: theme.textColor,
+        lineHeight: 1.7,
     };
 
     return <li style={{ ...baseStyle, ...style }}>{children}</li>;
@@ -639,13 +644,15 @@ const UnorderedList: React.FC<{
     theme: Theme;
     style?: React.CSSProperties;
 }> = ({ children, theme, style = {} }) => {
+    // ul に muted 系の color を指定すると ::marker がそれを継承する。
+    // 各 <li> で textColor を上書きして本文の色は保つ。
     const baseStyle: React.CSSProperties = {
-        margin: "4px 0 0",
+        margin: "4px 0 14px",
         paddingLeft: "22px",
         listStyleType: "disc",
-        color: theme.textColor,
+        color: theme.mutedColor,
         fontSize: "15px",
-        lineHeight: 1.78,
+        lineHeight: 1.7,
     };
 
     return <ul style={{ ...baseStyle, ...style }}>{children}</ul>;
@@ -660,12 +667,12 @@ const OrderedList: React.FC<{
     style?: React.CSSProperties;
 }> = ({ children, theme, style = {} }) => {
     const baseStyle: React.CSSProperties = {
-        margin: "4px 0 0",
+        margin: "4px 0 14px",
         paddingLeft: "22px",
         listStyleType: "decimal",
-        color: theme.textColor,
+        color: theme.mutedColor,
         fontSize: "15px",
-        lineHeight: 1.78,
+        lineHeight: 1.7,
     };
 
     return <ol style={{ ...baseStyle, ...style }}>{children}</ol>;
@@ -1024,6 +1031,25 @@ const renderAstNode = (
                                 {renderChildren(paragraphNode, theme)}
                             </React.Fragment>
                         );
+                    } else if (child.type === "list") {
+                        // ネストされたリスト: 下マージンを詰めて親 li を膨らませない
+                        // (これをしないと ul だけ li 高さが増えて ol との行間差が目立つ)
+                        const listChild = child as Parent & { ordered?: boolean };
+                        const NestedListComp = listChild.ordered
+                            ? OrderedList
+                            : UnorderedList;
+                        const childKey = `nested-list-${i}`;
+                        return (
+                            <NestedListComp
+                                theme={theme}
+                                key={childKey}
+                                style={{ marginTop: "4px", marginBottom: 0 }}
+                            >
+                                {listChild.children.map((subItem, j) =>
+                                    renderAstNode(subItem as RootContent, theme, j)
+                                )}
+                            </NestedListComp>
+                        );
                     } else {
                         // 他のタイプのノードは通常通りレンダリング
                         return renderAstNode(child as RootContent, theme, i);
@@ -1238,9 +1264,10 @@ const MarkdownToJsx: React.FC<MarkdownToJsxProps> = ({
         color: theme.textColor,
         fontFamily: FONT_SANS,
         fontSize: "15px",
-        lineHeight: 1.75,
-        padding: "30px",
-        borderRadius: "6px",
+        lineHeight: 1.9,
+        letterSpacing: "0.02em",
+        padding: "36px 40px",
+        borderRadius: "4px",
         transition: "all 0.3s ease",
         margin: "0 auto",
     };
